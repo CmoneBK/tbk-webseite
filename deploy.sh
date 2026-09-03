@@ -11,6 +11,8 @@ GIT_BASE="/home/users/ctnutzerone/git"
 SITE_DIR="$GIT_BASE/tbk-webseite"
 MAT_DIR="$GIT_BASE/unterrichtsmaterial"
 UNTERRICHT="${DOCROOT}unterricht/"
+VALIS_DIR="$GIT_BASE/valis"
+VALIS_WEB="${DOCROOT}valis/"
 
 # Jekyll-Front-Matter (--- ... ---) am Dateianfang entfernen.
 strip_fm() { awk 'NR==1&&$0=="---"{fm=1;next} fm&&$0=="---"{fm=0;next} !fm'; }
@@ -119,12 +121,16 @@ fi
 if [ -d "$MAT_DIR/.git" ]; then
   if [ -n "$(repo_advanced "$MAT_DIR")" ]; then changed=1; fi
 fi
-# Bootstrap: fehlt die Uebersicht, trotzdem einmal deployen.
+if [ -d "$VALIS_DIR/.git" ]; then
+  if [ -n "$(repo_advanced "$VALIS_DIR")" ]; then changed=1; fi
+fi
+# Bootstrap: fehlt eine Zielseite, trotzdem einmal deployen.
 if [ ! -f "${UNTERRICHT}index.html" ]; then changed=1; fi
+if [ -d "$VALIS_DIR/.git" ] && [ ! -f "${VALIS_WEB}index.html" ]; then changed=1; fi
 if [ "$changed" -eq 0 ]; then exit 0; fi
 
 # --- 1) Hauptseite -> DocumentRoot (unterricht/ und ACME schuetzen) ---
-rsync -a --delete --exclude='.well-known/' --exclude='unterricht/' "$SITE_DIR/public/" "$DOCROOT"
+rsync -a --delete --exclude='.well-known/' --exclude='unterricht/' --exclude='valis/' "$SITE_DIR/public/" "$DOCROOT"
 
 # --- 2) Unterrichtsmaterial -> DocumentRoot/unterricht/ ---
 if [ -d "$MAT_DIR/.git" ]; then
@@ -137,5 +143,12 @@ if [ -d "$MAT_DIR/.git" ]; then
   gen_overview > "${UNTERRICHT}index.html"
 fi
 
+# --- 3) VALIS -> DocumentRoot/valis/ (statisch; splash/ wird nicht ausgeliefert) ---
+if [ -d "$VALIS_DIR/.git" ]; then
+  mkdir -p "$VALIS_WEB"
+  rsync -a --delete --exclude='.git/' --exclude='.claude/' --exclude='splash/' "$VALIS_DIR/" "$VALIS_WEB"
+fi
+
 MAT_REV="-"; [ -d "$MAT_DIR/.git" ] && MAT_REV=$(git -C "$MAT_DIR" rev-parse --short HEAD)
-echo "$(date '+%F %T') deployed site=$(git -C "$SITE_DIR" rev-parse --short HEAD) material=$MAT_REV"
+VALIS_REV="-"; [ -d "$VALIS_DIR/.git" ] && VALIS_REV=$(git -C "$VALIS_DIR" rev-parse --short HEAD)
+echo "$(date '+%F %T') deployed site=$(git -C "$SITE_DIR" rev-parse --short HEAD) material=$MAT_REV valis=$VALIS_REV"
