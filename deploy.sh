@@ -47,7 +47,9 @@ cat <<'HEAD'
   .back:hover{text-decoration:underline}
   h1{font-size:clamp(26px,4vw,34px);letter-spacing:-.5px;margin:0 0 10px}
   .lead{color:var(--muted);font-size:17px;margin:0}
-  .grid{display:grid;gap:14px;padding:28px 0 8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));}
+  .grid{display:grid;gap:14px;padding:14px 0 8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));}
+  .cat{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:34px 0 0;padding-top:22px;border-top:1px solid var(--border);}
+  .cat:first-of-type{border-top:0;padding-top:6px;margin-top:16px}
   a.card{display:flex;align-items:center;min-height:64px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;text-decoration:none;color:inherit;box-shadow:var(--shadow);transition:transform .15s ease,border-color .15s ease;font-weight:600;font-size:15px;}
   a.card:hover{transform:translateY(-3px);border-color:var(--accent)}
   footer{text-align:center;color:var(--muted);font-size:13px;padding:40px 0 32px;border-top:1px solid var(--border);margin-top:48px}
@@ -61,21 +63,37 @@ cat <<'HEAD'
     <p class="lead">Interaktive Werkzeuge f&uuml;r die Fertigungs- und Pr&uuml;ftechnik.</p>
   </header>
   <main class="wrap">
-    <div class="grid">
 HEAD
-  for f in "${UNTERRICHT}tools/"*.html; do
-    [ -e "$f" ] || continue
+  # Karte fuer eine Tool-Datei bauen (Titel robust gegen '<', HTML-maskiert).
+  card_for() {
+    local f="$1" base raw t
     base=$(basename "$f")
-    # Titel robust holen: greedy (vertraegt '<' im Titel), bricht bei Nichttreffer nicht ab.
     raw=$(grep -iom1 '<title>.*</title>' "$f" || true)
     t=$(printf '%s' "$raw" | sed -E 's|.*<title>(.*)</title>.*|\1|I; s/^Fertigungstechnik:[[:space:]]*//')
     [ -n "$t" ] || t=$(printf '%s' "${base%.html}" | sed 's/-/ /g')
-    # Fuer die HTML-Ausgabe maskieren.
     t=$(printf '%s' "$t" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
     printf '      <a class="card" href="tools/%s"><span>%s</span></a>\n' "$base" "$t"
+  }
+  # Tools nach Dateinamen in Kategorien einsortieren.
+  mm=""; tol=""; son=""
+  for f in "${UNTERRICHT}tools/"*.html; do
+    [ -e "$f" ] || continue
+    base=$(basename "$f")
+    card=$(card_for "$f")
+    case "$base" in
+      fertigungstechnik-messmittel-*)              mm="$mm$card"$'\n' ;;
+      fertigungstechnik-form-und-lagetoleranzen-*) tol="$tol$card"$'\n' ;;
+      *)                                           son="$son$card"$'\n' ;;
+    esac
   done
+  emit_cat() {  # $1 = Titel, $2 = Karten-HTML
+    [ -n "$2" ] || return 0
+    printf '    <h2 class="cat">%s</h2>\n    <div class="grid">\n%s    </div>\n' "$1" "$2"
+  }
+  emit_cat "Messmittel" "$mm"
+  emit_cat "Form- und Lagetoleranzen" "$tol"
+  emit_cat "Weitere Werkzeuge" "$son"
 cat <<'FOOT'
-    </div>
   </main>
   <footer class="wrap">&copy; 2026 t-bk.de &middot; <a href="/impressum.html">Impressum</a></footer>
 </body>
