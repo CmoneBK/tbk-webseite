@@ -103,7 +103,19 @@ FOOT
 
 # --- Aenderungen erkennen ---
 changed=0
-if [ -n "$(repo_advanced "$SITE_DIR")" ]; then changed=1; fi
+# Nach einem Selbst-Update (siehe unten) immer deployen.
+if [ -n "${TBK_REEXEC:-}" ]; then changed=1; fi
+
+site_changed=""
+if [ -n "$(repo_advanced "$SITE_DIR")" ]; then site_changed=1; changed=1; fi
+
+# Hat sich deploy.sh selbst geaendert, die AKTUALISIERTE Version ausfuehren --
+# sonst liefe in diesem Prozess weiter die alte, schon geladene Logik.
+if [ -n "$site_changed" ] && [ -z "${TBK_REEXEC:-}" ]; then
+  export TBK_REEXEC=1
+  exec bash "$SITE_DIR/deploy.sh"
+fi
+
 if [ -d "$MAT_DIR/.git" ]; then
   if [ -n "$(repo_advanced "$MAT_DIR")" ]; then changed=1; fi
 fi
