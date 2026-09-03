@@ -66,8 +66,12 @@ HEAD
   for f in "${UNTERRICHT}tools/"*.html; do
     [ -e "$f" ] || continue
     base=$(basename "$f")
-    t=$(grep -oiE '<title>[^<]*</title>' "$f" | head -1 | sed -E 's|</?title>||gi; s/^Fertigungstechnik:[[:space:]]*//')
-    [ -z "$t" ] && t=$(echo "${base%.html}" | sed 's/-/ /g')
+    # Titel robust holen: greedy (vertraegt '<' im Titel), bricht bei Nichttreffer nicht ab.
+    raw=$(grep -iom1 '<title>.*</title>' "$f" || true)
+    t=$(printf '%s' "$raw" | sed -E 's|.*<title>(.*)</title>.*|\1|I; s/^Fertigungstechnik:[[:space:]]*//')
+    [ -n "$t" ] || t=$(printf '%s' "${base%.html}" | sed 's/-/ /g')
+    # Fuer die HTML-Ausgabe maskieren.
+    t=$(printf '%s' "$t" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
     printf '      <a class="card" href="tools/%s"><span>%s</span></a>\n' "$base" "$t"
   done
 cat <<'FOOT'
