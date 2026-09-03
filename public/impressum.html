@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Impressum &middot; t-bk.de</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{
+    --bg:#f7f7f5; --fg:#1a1a1a; --muted:#5f5f5a;
+    --card:#ffffff; --border:#e3e3df; --accent:#2b6cb0;
+    --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.05);
+    --note:#fdf3d8; --note-fg:#7a5b00; --note-border:#e9d9a0;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#151517; --fg:#ececec; --muted:#a0a0a0;
+      --card:#1e1e21; --border:#2c2c30; --accent:#5b9bd5;
+      --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+      --note:#2a2410; --note-fg:#e0c257; --note-border:#4a3f18;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font:16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .wrap{width:100%; max-width:720px; margin:0 auto; padding:48px 20px 64px}
+  a{color:var(--accent)}
+  .back{display:inline-block; margin-bottom:28px; font-size:14px; text-decoration:none}
+  .back:hover{text-decoration:underline}
+  h1{font-size:28px; letter-spacing:-.5px; margin:0 0 24px}
+  h2{font-size:16px; margin:28px 0 6px}
+  .card{
+    background:var(--card); border:1px solid var(--border);
+    border-radius:14px; padding:28px 30px; box-shadow:var(--shadow);
+  }
+  p{margin:.2em 0}
+  .placeholder{
+    background:var(--note); color:var(--note-fg); border:1px dashed var(--note-border);
+    border-radius:8px; padding:2px 8px; font-size:.9em; font-weight:600;
+  }
+  .muted{color:var(--muted); font-size:14px; margin-top:32px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="/">&larr; Zur&uuml;ck zur Startseite</a>
+    <div class="card">
+      <h1>Impressum</h1>
+
+      <h2>Angaben gem&auml;&szlig; &sect; 5 DDG</h2>
+      <p>Christoph Mones</p>
+      <p><span class="placeholder">c/o-Anschrift folgt</span></p>
+
+      <h2>Kontakt</h2>
+      <p>E-Mail: <span class="placeholder">kontakt@t-bk.de (folgt)</span></p>
+
+      <h2>Verantwortlich f&uuml;r den Inhalt gem&auml;&szlig; &sect; 18 Abs. 2 MStV</h2>
+      <p>Christoph Mones</p>
+      <p><span class="placeholder">Anschrift wie oben</span></p>
+
+      <p class="muted">Diese Seite befindet sich im Aufbau. Die als Platzhalter
+      markierten Angaben werden vor dem produktiven Betrieb erg&auml;nzt.</p>
+    </div>
+  </div>
+</body>
+</html>
