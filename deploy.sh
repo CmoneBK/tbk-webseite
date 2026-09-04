@@ -61,7 +61,7 @@ CSS
   printf '</style>\n</head>\n<body>\n  <header class="wrap">\n    <a class="back" href="/">&larr; Startseite</a>\n    <h1>%s</h1>\n    <p class="lead">%s</p>\n  </header>\n  <main class="wrap">\n' "$2" "$3"
 }
 page_foot() {
-  printf '  </main>\n  <footer class="wrap">&copy; 2026 t-bk.de &middot; <a href="/impressum.html">Impressum</a></footer>\n</body>\n</html>\n'
+  printf '  </main>\n  <footer class="wrap">&copy; 2026 t-bk.de &middot; <a href="/impressum.html">Impressum</a> &middot; <a href="/datenschutz.html">Datenschutz</a></footer>\n</body>\n</html>\n'
 }
 
 # Titel einer HTML-Datei robust auslesen (vertraegt '<' im Titel), HTML-maskiert.
