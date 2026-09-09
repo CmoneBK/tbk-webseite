@@ -66,8 +66,9 @@ page_head() {  # $1 = <title>, $2 = H1, $3 = lead
   h1{font-size:clamp(26px,4vw,34px);letter-spacing:-.5px;margin:0 0 10px}
   .lead{color:var(--muted);font-size:17px;margin:0}
   .grid{display:grid;gap:14px;padding:14px 0 8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));}
-  .cat{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:34px 0 0;padding-top:22px;border-top:1px solid var(--border);}
-  .cat:first-of-type{border-top:0;padding-top:6px;margin-top:16px}
+  .bereich{font-size:21px;font-weight:700;letter-spacing:-.3px;margin:42px 0 0;padding-top:26px;border-top:1px solid var(--border);}
+  .bereich:first-of-type{border-top:0;padding-top:6px;margin-top:18px}
+  .cat{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:26px 0 0;}
   a.card{display:flex;align-items:center;min-height:64px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;text-decoration:none;color:inherit;box-shadow:var(--shadow);transition:transform .15s ease,border-color .15s ease;font-weight:600;font-size:15px;}
   a.card:hover{transform:translateY(-3px);border-color:var(--accent)}
   footer{text-align:center;color:var(--muted);font-size:13px;padding:40px 0 32px;border-top:1px solid var(--border);margin-top:48px}
@@ -79,35 +80,117 @@ page_foot() {
   printf '  </main>\n  <footer class="wrap">&copy; 2026 t-bk.de &middot; <a href="/impressum.html">Impressum</a> &middot; <a href="/datenschutz.html">Datenschutz</a></footer>\n</body>\n</html>\n'
 }
 
-# Titel einer HTML-Datei robust auslesen (vertraegt '<' im Titel), HTML-maskiert.
-html_title() {  # $1 = datei, $2 = optionaler prefix zum Strippen
-  local f="$1" pre="${2:-}" raw t
-  raw=$(grep -iom1 '<title>.*</title>' "$f" || true)
-  t=$(printf '%s' "$raw" | sed -E 's|.*<title>(.*)</title>.*|\1|I')
-  [ -z "$pre" ] || t=$(printf '%s' "$t" | sed -E "s/^${pre}[[:space:]]*//")
-  printf '%s' "$t" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
+# Titel einer HTML-Datei roh auslesen (vertraegt '<' im Titel).
+# Mehrfach-Leerzeichen werden zusammengezogen, damit ein vertippter Titel
+# ("Messmittel  - Messuhr") die Gruppierung nicht aushebelt.
+raw_title() {  # $1 = datei
+  local raw
+  raw=$(grep -iom1 '<title>.*</title>' "$1" || true)
+  printf '%s' "$raw" \
+    | sed -E 's|.*<title>(.*)</title>.*|\1|I' \
+    | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//'
 }
 
-# --- /werkzeuge/ : Tools nach Kategorien ---
+# Text fuer die HTML-Ausgabe maskieren.
+esc_html() { sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'; }
+
+# Titel einer HTML-Datei auslesen, HTML-maskiert.
+html_title() {  # $1 = datei
+  raw_title "$1" | esc_html
+}
+
+# Titel "Bereich: Unterkategorie - Name" zerlegen.
+# Ausgabe: Bereich TAB Unterkategorie TAB Name (Unterkategorie ggf. leer).
+# Getrennt wird am " - " MIT Leerzeichen, damit Bindestriche im Text
+# ("Form- und Lagetoleranzen", "Wellen-CAD-Software", "Vorschub <-> Rautiefe")
+# nicht faelschlich als Trenner gelten.
+split_title() {  # $1 = titel
+  printf '%s' "$1" | awk '
+    {
+      t=$0
+      i=index(t,":")
+      if(i>0){ b=substr(t,1,i-1); r=substr(t,i+1) } else { b="Allgemein"; r=t }
+      sub(/^ +/,"",b); sub(/ +$/,"",b)
+      sub(/^ +/,"",r); sub(/ +$/,"",r)
+      j=index(r," - ")
+      if(j>0){ u=substr(r,1,j-1); n=substr(r,j+3) } else { u=""; n=r }
+      sub(/ +$/,"",u); sub(/^ +/,"",n)
+      printf "%s\t%s\t%s", b, u, n
+    }'
+}
+
+# --- /werkzeuge/ : Tools nach Bereich und Unterkategorie ---
+# Gruppiert wird nach der Titel-Konvention "Bereich: Unterkategorie - Name".
+# Die Reihenfolge kommt aus _data/kategorien.csv im Material-Repo - dieselbe
+# Datei liest dort index.html fuer die GitHub-Pages-Uebersicht, damit beide
+# Seiten identisch sortieren. Nicht gelistete Bereiche bzw. Unterkategorien
+# werden alphabetisch angehaengt; ein neues Werkzeug erscheint also auch
+# ganz ohne Pflege der CSV.
+KAT_CSV="$MAT_DIR/_data/kategorien.csv"
+
+kat_csv_rows() {  # Kopfzeile, CR und Leerzeilen entfernen
+  [ -f "$KAT_CSV" ] || return 0
+  tail -n +2 "$KAT_CSV" | tr -d '\r' | awk 'NF'
+}
+
+emit_grid() {  # $1 = Zeilen "bereich TAB unter TAB name TAB datei"
+  [ -n "$1" ] || return 0
+  local line gn gfile
+  printf '    <div class="grid">\n'
+  printf '%s\n' "$1" | while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    # Bewusst cut statt "IFS=$'\t' read": bash zaehlt TAB zum IFS-Whitespace
+    # und wuerde die leere Unterkategorie-Spalte verschlucken - die Felder
+    # verrutschen dann genau bei Werkzeugen ohne Unterkategorie.
+    gn=$(printf '%s' "$line" | cut -f3)
+    gfile=$(printf '%s' "$line" | cut -f4)
+    [ -n "$gfile" ] || continue
+    printf '      <a class="card" href="tools/%s"><span>%s</span></a>\n' \
+      "$gfile" "$(printf '%s' "$gn" | esc_html)"
+  done
+  printf '    </div>\n'
+}
+
 gen_werkzeuge() {
-  page_head "Werkzeuge &middot; t-bk.de" "Werkzeuge" "Interaktive Web-Tools und Simulationen f&uuml;r die Fertigungs- und Pr&uuml;ftechnik."
-  local mm="" tol="" son="" f base t card
+  page_head "Werkzeuge &middot; t-bk.de" "Werkzeuge" "Interaktive Web-Tools und Simulationen f&uuml;r den technischen Unterricht."
+  local rows f base t b u bereiche kats block
+  rows=$(mktemp)
   for f in "${WERKZEUGE}tools/"*.html; do
     [ -e "$f" ] || continue
     base=$(basename "$f")
-    t=$(html_title "$f" "Fertigungstechnik:")
+    t=$(raw_title "$f")
     [ -n "$t" ] || t=$(printf '%s' "${base%.html}" | sed 's/-/ /g')
-    card=$(printf '      <a class="card" href="tools/%s"><span>%s</span></a>\n' "$base" "$t")
-    case "$base" in
-      fertigungstechnik-messmittel-*)              mm="$mm$card"$'\n' ;;
-      fertigungstechnik-form-und-lagetoleranzen-*) tol="$tol$card"$'\n' ;;
-      *)                                           son="$son$card"$'\n' ;;
-    esac
+    printf '%s\t%s\n' "$(split_title "$t")" "$base" >> "$rows"
   done
-  emit_cat() { [ -n "$2" ] || return 0; printf '    <h2 class="cat">%s</h2>\n    <div class="grid">\n%s    </div>\n' "$1" "$2"; }
-  emit_cat "Messmittel" "$mm"
-  emit_cat "Form- und Lagetoleranzen" "$tol"
-  emit_cat "Weitere Werkzeuge" "$son"
+
+  bereiche=$( { kat_csv_rows | cut -d, -f1; cut -f1 "$rows" | sort; } | awk 'NF && !seen[$0]++' )
+
+  while IFS= read -r b; do
+    [ -n "$b" ] || continue
+    awk -F'\t' -v b="$b" '$1==b{c=1} END{exit !c}' "$rows" || continue
+    printf '    <h2 class="bereich">%s</h2>\n' "$(printf '%s' "$b" | esc_html)"
+
+    # a) Werkzeuge ohne Unterkategorie stehen direkt unter dem Bereich
+    emit_grid "$(awk -F'\t' -v b="$b" '$1==b && $2==""' "$rows" | sort -t$'\t' -k3,3)"
+
+    # b) danach je Unterkategorie ein eigener Block
+    kats=$( { kat_csv_rows | awk -F, -v b="$b" '$1==b{print $2}'
+              awk -F'\t' -v b="$b" '$1==b && $2!=""{print $2}' "$rows" | sort; } \
+            | awk 'NF && !seen[$0]++' )
+    while IFS= read -r u; do
+      [ -n "$u" ] || continue
+      block=$(awk -F'\t' -v b="$b" -v u="$u" '$1==b && $2==u' "$rows" | sort -t$'\t' -k3,3)
+      [ -n "$block" ] || continue
+      printf '    <h3 class="cat">%s</h3>\n' "$(printf '%s' "$u" | esc_html)"
+      emit_grid "$block"
+    done <<KATS
+$kats
+KATS
+  done <<BEREICHE
+$bereiche
+BEREICHE
+
+  rm -f "$rows"
   page_foot
 }
 
