@@ -22,6 +22,21 @@ PROJEKTE="${DOCROOT}projekte/"
 # Jekyll-Front-Matter (--- ... ---) am Dateianfang entfernen.
 strip_fm() { awk 'NR==1&&$0=="---"{fm=1;next} fm&&$0=="---"{fm=0;next} !fm'; }
 
+# Ruecklink zur Werkzeug-Uebersicht in ein Tool einfuegen.
+# Quelle ist das Material-Repo (_includes/back-nav.html) - dieselbe Datei nutzt
+# dort _layouts/tool.html fuer die GitHub-Pages-Ausgabe, damit beide Wege
+# identisch aussehen und nur an einer Stelle gepflegt werden.
+BACK_NAV="$MAT_DIR/_includes/back-nav.html"
+inject_back() {  # $1 = datei
+  local f="$1"
+  [ -f "$BACK_NAV" ] || return 0
+  grep -q 'id="tbk-back"' "$f" && return 0
+  awk -v nav="$BACK_NAV" '
+    /<\/body>/ { while ((getline l < nav) > 0) print l; close(nav) }
+    { print }
+  ' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+}
+
 # origin/<branch> holen; bei neuem Commit fast-forwarden und "yes" ausgeben.
 repo_advanced() {  # $1 = repo-dir, $2 = branch
   local d="$1" b="$2" l r
@@ -144,6 +159,7 @@ if [ -d "$MAT_DIR/.git" ]; then
   for f in "${WERKZEUGE}tools/"*.html; do
     [ -e "$f" ] || continue
     strip_fm < "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+    inject_back "$f"
   done
   gen_werkzeuge > "${WERKZEUGE}index.html"
 fi
