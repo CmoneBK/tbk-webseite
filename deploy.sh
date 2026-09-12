@@ -2,6 +2,9 @@
 # Deployt t-bk.de aus mehreren Repos:
 #   tbk-webseite/public       -> DocumentRoot (Startseite, Impressum)
 #   unterrichtsmaterial (main)-> /werkzeuge/         (Tools + generierte Uebersicht)
+#   tbk-lernsituationen-uebungen (main)
+#                             -> /unterrichtsmaterial/ (Lernsituationen, Uebungen,
+#                                                       Trainings - 1:1 kopiert)
 #   valis (main)              -> /projekte/valis/
 #   bk-e-plan (master)        -> /projekte/e-plan/
 #   + generierte /projekte/-Uebersicht
@@ -13,10 +16,14 @@ DOCROOT="/home/users/ctnutzerone/www/t-bk.de/"
 GIT_BASE="/home/users/ctnutzerone/git"
 SITE_DIR="$GIT_BASE/tbk-webseite"
 MAT_DIR="$GIT_BASE/unterrichtsmaterial"
+# Achtung, aehnliche Namen: MAT_DIR ist das Werkzeuge-Repo (Tools aus CodePen),
+# LERN_DIR das Material-Repo (Lernsituationen, Uebungen, Trainings).
+LERN_DIR="$GIT_BASE/tbk-lernsituationen-uebungen"
 VALIS_DIR="$GIT_BASE/valis"
 EPLAN_DIR="$GIT_BASE/bk-e-plan"
 
 WERKZEUGE="${DOCROOT}werkzeuge/"
+MATERIAL="${DOCROOT}unterrichtsmaterial/"
 PROJEKTE="${DOCROOT}projekte/"
 
 # Jekyll-Front-Matter (--- ... ---) am Dateianfang entfernen.
@@ -223,17 +230,19 @@ if [ -n "$site_changed" ] && [ -z "${TBK_REEXEC:-}" ]; then
 fi
 
 if [ -d "$MAT_DIR/.git" ];   then if [ -n "$(repo_advanced "$MAT_DIR" main)" ];     then changed=1; fi; fi
+if [ -d "$LERN_DIR/.git" ];  then if [ -n "$(repo_advanced "$LERN_DIR" main)" ];    then changed=1; fi; fi
 if [ -d "$VALIS_DIR/.git" ]; then if [ -n "$(repo_advanced "$VALIS_DIR" main)" ];   then changed=1; fi; fi
 if [ -d "$EPLAN_DIR/.git" ]; then if [ -n "$(repo_advanced "$EPLAN_DIR" master)" ]; then changed=1; fi; fi
 
 # Bootstrap: fehlt eine Zielseite, trotzdem deployen.
 if [ ! -f "${WERKZEUGE}index.html" ]; then changed=1; fi
+if [ -d "$LERN_DIR/.git" ] && [ ! -f "${MATERIAL}index.html" ]; then changed=1; fi
 if [ -d "$VALIS_DIR/.git" ] && [ ! -f "${PROJEKTE}valis/index.html" ]; then changed=1; fi
 if [ -d "$EPLAN_DIR/.git" ] && [ ! -f "${PROJEKTE}e-plan/index.html" ]; then changed=1; fi
 if [ "$changed" -eq 0 ]; then exit 0; fi
 
 # --- 1) Hauptseite -> DocumentRoot (Bereiche + ACME schuetzen) ---
-rsync -a --delete --exclude='.well-known/' --exclude='werkzeuge/' --exclude='projekte/' "$SITE_DIR/public/" "$DOCROOT"
+rsync -a --delete --exclude='.well-known/' --exclude='werkzeuge/' --exclude='unterrichtsmaterial/' --exclude='projekte/' "$SITE_DIR/public/" "$DOCROOT"
 
 # --- 2) Werkzeuge -> /werkzeuge/ ---
 if [ -d "$MAT_DIR/.git" ]; then
@@ -247,7 +256,22 @@ if [ -d "$MAT_DIR/.git" ]; then
   gen_werkzeuge > "${WERKZEUGE}index.html"
 fi
 
-# --- 3) Projekte -> /projekte/<name>/ (+ Uebersicht) ---
+# --- 3) Unterrichtsmaterial -> /unterrichtsmaterial/ ---
+# Hier gibt es nichts zu generieren: das Repo nutzt bewusst kein Jekyll, seine
+# index.html wird dort von build/build.mjs erzeugt und mitcommittet - dieselbe
+# Datei liefert auch GitHub Pages aus. Auch der Ruecklink steckt schon als
+# <script src="../assets/back-nav.js"> in den Seiten. Also nur kopieren und
+# weglassen, was im Web nichts zu suchen hat.
+if [ -d "$LERN_DIR/.git" ]; then
+  mkdir -p "$MATERIAL"
+  rsync -a --delete \
+    --exclude='.git/' --exclude='.github/' --exclude='.claude/' \
+    --exclude='build/' --exclude='vorlagen/' \
+    --exclude='README.md' --exclude='DEPLOYMENT.md' --exclude='package.json' \
+    "$LERN_DIR/" "$MATERIAL"
+fi
+
+# --- 4) Projekte -> /projekte/<name>/ (+ Uebersicht) ---
 mkdir -p "$PROJEKTE"
 if [ -d "$VALIS_DIR/.git" ]; then
   mkdir -p "${PROJEKTE}valis"
@@ -259,4 +283,4 @@ if [ -d "$EPLAN_DIR/.git" ]; then
 fi
 gen_projekte > "${PROJEKTE}index.html"
 
-echo "$(date '+%F %T') deployed site=$(rev "$SITE_DIR") material=$(rev "$MAT_DIR") valis=$(rev "$VALIS_DIR") eplan=$(rev "$EPLAN_DIR")"
+echo "$(date '+%F %T') deployed site=$(rev "$SITE_DIR") werkzeuge=$(rev "$MAT_DIR") material=$(rev "$LERN_DIR") valis=$(rev "$VALIS_DIR") eplan=$(rev "$EPLAN_DIR")"
