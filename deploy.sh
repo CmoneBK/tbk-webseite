@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deployt t-bk.de aus mehreren Repos:
 #   tbk-webseite/public       -> DocumentRoot (Startseite, Impressum)
-#   unterrichtsmaterial (main)-> /werkzeuge/         (Tools + generierte Uebersicht)
+#   unterrichtsmaterial (main)-> /werkzeuge/         (Tools + Uebersicht, 1:1 kopiert)
 #   tbk-lernsituationen-uebungen (main)
 #                             -> /unterrichtsmaterial/ (Lernsituationen, Uebungen,
 #                                                       Trainings - 1:1 kopiert)
@@ -25,24 +25,6 @@ EPLAN_DIR="$GIT_BASE/bk-e-plan"
 WERKZEUGE="${DOCROOT}werkzeuge/"
 MATERIAL="${DOCROOT}unterrichtsmaterial/"
 PROJEKTE="${DOCROOT}projekte/"
-
-# Jekyll-Front-Matter (--- ... ---) am Dateianfang entfernen.
-strip_fm() { awk 'NR==1&&$0=="---"{fm=1;next} fm&&$0=="---"{fm=0;next} !fm'; }
-
-# Ruecklink zur Werkzeug-Uebersicht in ein Tool einfuegen.
-# Quelle ist das Material-Repo (_includes/back-nav.html) - dieselbe Datei nutzt
-# dort _layouts/tool.html fuer die GitHub-Pages-Ausgabe, damit beide Wege
-# identisch aussehen und nur an einer Stelle gepflegt werden.
-BACK_NAV="$MAT_DIR/_includes/back-nav.html"
-inject_back() {  # $1 = datei
-  local f="$1"
-  [ -f "$BACK_NAV" ] || return 0
-  grep -q 'id="tbk-back"' "$f" && return 0
-  awk -v nav="$BACK_NAV" '
-    /<\/body>/ { while ((getline l < nav) > 0) print l; close(nav) }
-    { print }
-  ' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
-}
 
 # origin/<branch> holen; bei neuem Commit fast-forwarden und "yes" ausgeben.
 repo_advanced() {  # $1 = repo-dir, $2 = branch
@@ -109,101 +91,6 @@ html_title() {  # $1 = datei
   raw_title "$1" | esc_html
 }
 
-# Titel "Bereich: Unterkategorie - Name" zerlegen.
-# Ausgabe: Bereich TAB Unterkategorie TAB Name (Unterkategorie ggf. leer).
-# Getrennt wird am " - " MIT Leerzeichen, damit Bindestriche im Text
-# ("Form- und Lagetoleranzen", "Wellen-CAD-Software", "Vorschub <-> Rautiefe")
-# nicht faelschlich als Trenner gelten.
-split_title() {  # $1 = titel
-  printf '%s' "$1" | awk '
-    {
-      t=$0
-      i=index(t,":")
-      if(i>0){ b=substr(t,1,i-1); r=substr(t,i+1) } else { b="Allgemein"; r=t }
-      sub(/^ +/,"",b); sub(/ +$/,"",b)
-      sub(/^ +/,"",r); sub(/ +$/,"",r)
-      j=index(r," - ")
-      if(j>0){ u=substr(r,1,j-1); n=substr(r,j+3) } else { u=""; n=r }
-      sub(/ +$/,"",u); sub(/^ +/,"",n)
-      printf "%s\t%s\t%s", b, u, n
-    }'
-}
-
-# --- /werkzeuge/ : Tools nach Bereich und Unterkategorie ---
-# Gruppiert wird nach der Titel-Konvention "Bereich: Unterkategorie - Name".
-# Die Reihenfolge kommt aus _data/kategorien.csv im Material-Repo - dieselbe
-# Datei liest dort index.html fuer die GitHub-Pages-Uebersicht, damit beide
-# Seiten identisch sortieren. Nicht gelistete Bereiche bzw. Unterkategorien
-# werden alphabetisch angehaengt; ein neues Werkzeug erscheint also auch
-# ganz ohne Pflege der CSV.
-KAT_CSV="$MAT_DIR/_data/kategorien.csv"
-
-kat_csv_rows() {  # Kopfzeile, CR und Leerzeilen entfernen
-  [ -f "$KAT_CSV" ] || return 0
-  tail -n +2 "$KAT_CSV" | tr -d '\r' | awk 'NF'
-}
-
-emit_grid() {  # $1 = Zeilen "bereich TAB unter TAB name TAB datei"
-  [ -n "$1" ] || return 0
-  local line gn gfile
-  printf '    <div class="grid">\n'
-  printf '%s\n' "$1" | while IFS= read -r line; do
-    [ -n "$line" ] || continue
-    # Bewusst cut statt "IFS=$'\t' read": bash zaehlt TAB zum IFS-Whitespace
-    # und wuerde die leere Unterkategorie-Spalte verschlucken - die Felder
-    # verrutschen dann genau bei Werkzeugen ohne Unterkategorie.
-    gn=$(printf '%s' "$line" | cut -f3)
-    gfile=$(printf '%s' "$line" | cut -f4)
-    [ -n "$gfile" ] || continue
-    printf '      <a class="card" href="tools/%s"><span>%s</span></a>\n' \
-      "$gfile" "$(printf '%s' "$gn" | esc_html)"
-  done
-  printf '    </div>\n'
-}
-
-gen_werkzeuge() {
-  page_head "Werkzeuge &middot; t-bk.de" "Werkzeuge" "Interaktive Web-Tools und Simulationen f&uuml;r den technischen Unterricht."
-  local rows f base t b u bereiche kats block
-  rows=$(mktemp)
-  for f in "${WERKZEUGE}tools/"*.html; do
-    [ -e "$f" ] || continue
-    base=$(basename "$f")
-    t=$(raw_title "$f")
-    [ -n "$t" ] || t=$(printf '%s' "${base%.html}" | sed 's/-/ /g')
-    printf '%s\t%s\n' "$(split_title "$t")" "$base" >> "$rows"
-  done
-
-  bereiche=$( { kat_csv_rows | cut -d, -f1; cut -f1 "$rows" | sort; } | awk 'NF && !seen[$0]++' )
-
-  while IFS= read -r b; do
-    [ -n "$b" ] || continue
-    awk -F'\t' -v b="$b" '$1==b{c=1} END{exit !c}' "$rows" || continue
-    printf '    <h2 class="bereich">%s</h2>\n' "$(printf '%s' "$b" | esc_html)"
-
-    # a) Werkzeuge ohne Unterkategorie stehen direkt unter dem Bereich
-    emit_grid "$(awk -F'\t' -v b="$b" '$1==b && $2==""' "$rows" | sort -t$'\t' -k3,3)"
-
-    # b) danach je Unterkategorie ein eigener Block
-    kats=$( { kat_csv_rows | awk -F, -v b="$b" '$1==b{print $2}'
-              awk -F'\t' -v b="$b" '$1==b && $2!=""{print $2}' "$rows" | sort; } \
-            | awk 'NF && !seen[$0]++' )
-    while IFS= read -r u; do
-      [ -n "$u" ] || continue
-      block=$(awk -F'\t' -v b="$b" -v u="$u" '$1==b && $2==u' "$rows" | sort -t$'\t' -k3,3)
-      [ -n "$block" ] || continue
-      printf '    <h3 class="cat">%s</h3>\n' "$(printf '%s' "$u" | esc_html)"
-      emit_grid "$block"
-    done <<KATS
-$kats
-KATS
-  done <<BEREICHE
-$bereiche
-BEREICHE
-
-  rm -f "$rows"
-  page_foot
-}
-
 # --- /projekte/ : je Unterordner ein Projekt ---
 gen_projekte() {
   page_head "Projekte &middot; t-bk.de" "Projekte" "Gr&ouml;&szlig;ere interaktive Entwicklungen."
@@ -248,15 +135,16 @@ if [ "$changed" -eq 0 ]; then exit 0; fi
 rsync -a --delete --exclude='.well-known/' --exclude='werkzeuge/' --exclude='unterrichtsmaterial/' --exclude='projekte/' "$SITE_DIR/public/" "$DOCROOT"
 
 # --- 2) Werkzeuge -> /werkzeuge/ ---
+# Wie beim Unterrichtsmaterial gibt es hier nichts mehr zu generieren: das
+# Repo nutzt kein Jekyll mehr, seine index.html erzeugt dort build/build.mjs
+# und committet sie mit - dieselbe Datei liefert auch GitHub Pages aus.
+# Ruecklink und Umschalter stecken schon als <script> in den Werkzeugen.
+# Kopiert wird nur tools/ und die Uebersicht; Notizen und Vorlagen aus dem
+# Repo-Wurzelverzeichnis bleiben aussen vor.
 if [ -d "$MAT_DIR/.git" ]; then
   mkdir -p "${WERKZEUGE}tools"
   rsync -a --delete "$MAT_DIR/tools/" "${WERKZEUGE}tools/"
-  for f in "${WERKZEUGE}tools/"*.html; do
-    [ -e "$f" ] || continue
-    strip_fm < "$f" > "$f.tmp" && mv "$f.tmp" "$f"
-    inject_back "$f"
-  done
-  gen_werkzeuge > "${WERKZEUGE}index.html"
+  cp "$MAT_DIR/index.html" "${WERKZEUGE}index.html"
 fi
 
 # --- 3) Unterrichtsmaterial -> /unterrichtsmaterial/ ---
