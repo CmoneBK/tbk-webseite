@@ -52,9 +52,7 @@ page_head() {  # $1 = <title>, $2 = H1, $3 = lead
   *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
   .wrap{width:100%;max-width:960px;margin:0 auto;padding:0 20px}
   a{color:var(--accent)}
-  header{padding:48px 0 8px}
-  .back{display:inline-block;margin-bottom:18px;font-size:14px;text-decoration:none}
-  .back:hover{text-decoration:underline}
+  header.wrap{padding-top:62px;padding-bottom:8px}
   h1{font-size:clamp(26px,4vw,34px);letter-spacing:-.5px;margin:0 0 10px}
   .lead{color:var(--muted);font-size:17px;margin:0}
   .grid{display:grid;gap:14px;padding:14px 0 8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));}
@@ -66,10 +64,10 @@ page_head() {  # $1 = <title>, $2 = H1, $3 = lead
   footer{text-align:center;color:var(--muted);font-size:13px;padding:40px 0 32px;border-top:1px solid var(--border);margin-top:48px}
   footer a{color:var(--muted)}
 CSS
-  printf '</style>\n<script src="/assets/thema.js"></script>\n</head>\n<body>\n  <header class="wrap">\n    <a class="back" href="/">&larr; Startseite</a>\n    <h1>%s</h1>\n    <p class="lead">%s</p>\n  </header>\n  <main class="wrap">\n' "$2" "$3"
+  printf '</style>\n<script src="/assets/thema.js"></script>\n</head>\n<body>\n  <header class="wrap">\n    <h1>%s</h1>\n    <p class="lead">%s</p>\n  </header>\n  <main class="wrap">\n' "$2" "$3"
 }
 page_foot() {
-  printf '  </main>\n  <footer class="wrap">&copy; 2026 t-bk.de &middot; <a href="/impressum.html">Impressum</a> &middot; <a href="/datenschutz.html">Datenschutz</a></footer>\n</body>\n</html>\n'
+  printf '  </main>\n  <footer class="wrap">&copy; 2026 t-bk.de &middot; <a href="/impressum.html">Impressum</a> &middot; <a href="/datenschutz.html">Datenschutz</a></footer>\n<script src="/assets/back-nav.js" data-ziel="/" data-text="Startseite"></script>\n</body>\n</html>\n'
 }
 
 # Titel einer HTML-Datei roh auslesen (vertraegt '<' im Titel).

@@ -32,10 +32,8 @@
     margin:0; background:var(--bg); color:var(--fg);
     font:16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
-  .wrap{width:100%; max-width:720px; margin:0 auto; padding:48px 20px 64px}
+  .wrap{width:100%; max-width:720px; margin:0 auto; padding:62px 20px 64px}
   a{color:var(--accent)}
-  .back{display:inline-block; margin-bottom:28px; font-size:14px; text-decoration:none}
-  .back:hover{text-decoration:underline}
   h1{font-size:28px; letter-spacing:-.5px; margin:0 0 24px}
   h2{font-size:16px; margin:28px 0 6px}
   .card{
@@ -53,7 +51,6 @@
 </head>
 <body>
   <div class="wrap">
-    <a class="back" href="/">&larr; Zur&uuml;ck zur Startseite</a>
     <div class="card">
       <h1>Impressum</h1>
 
@@ -76,5 +73,6 @@
       <a href="/">Startseite</a> &middot; <a href="/datenschutz.html">Datenschutz</a>
     </p>
   </div>
+<script src="/assets/back-nav.js" data-ziel="/" data-text="Startseite"></script>
 </body>
 </html>
