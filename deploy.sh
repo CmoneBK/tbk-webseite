@@ -63,7 +63,10 @@ page_head() {  # $1 = <title>, $2 = H1, $3 = lead
   printf '<!DOCTYPE html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>%s</title>\n<style>\n' "$1"
   cat <<'CSS'
   :root{--bg:#f7f7f5;--fg:#1a1a1a;--muted:#5f5f5a;--card:#fff;--border:#e3e3df;--accent:#2b6cb0;--shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.05);}
-  @media (prefers-color-scheme:dark){:root{--bg:#151517;--fg:#ececec;--muted:#a0a0a0;--card:#1e1e21;--border:#2c2c30;--accent:#5b9bd5;--shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);}}
+  /* Dunkel bei dunklem System, sofern nicht ausdruecklich hell gewaehlt. */
+  @media (prefers-color-scheme:dark){:root:not([data-thema="hell"]){--bg:#151517;--fg:#ececec;--muted:#a0a0a0;--card:#1e1e21;--border:#2c2c30;--accent:#5b9bd5;--shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);}}
+  /* Ausdruecklich dunkel gewaehlt - auch auf einem hellen System. */
+  :root[data-thema="dunkel"]{--bg:#151517;--fg:#ececec;--muted:#a0a0a0;--card:#1e1e21;--border:#2c2c30;--accent:#5b9bd5;--shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);}
   *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
   .wrap{width:100%;max-width:960px;margin:0 auto;padding:0 20px}
   a{color:var(--accent)}
@@ -81,7 +84,7 @@ page_head() {  # $1 = <title>, $2 = H1, $3 = lead
   footer{text-align:center;color:var(--muted);font-size:13px;padding:40px 0 32px;border-top:1px solid var(--border);margin-top:48px}
   footer a{color:var(--muted)}
 CSS
-  printf '</style>\n</head>\n<body>\n  <header class="wrap">\n    <a class="back" href="/">&larr; Startseite</a>\n    <h1>%s</h1>\n    <p class="lead">%s</p>\n  </header>\n  <main class="wrap">\n' "$2" "$3"
+  printf '</style>\n<script src="/assets/thema.js"></script>\n</head>\n<body>\n  <header class="wrap">\n    <a class="back" href="/">&larr; Startseite</a>\n    <h1>%s</h1>\n    <p class="lead">%s</p>\n  </header>\n  <main class="wrap">\n' "$2" "$3"
 }
 page_foot() {
   printf '  </main>\n  <footer class="wrap">&copy; 2026 t-bk.de &middot; <a href="/impressum.html">Impressum</a> &middot; <a href="/datenschutz.html">Datenschutz</a></footer>\n</body>\n</html>\n'

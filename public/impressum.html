@@ -12,14 +12,21 @@
     --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.05);
     --note:#fdf3d8; --note-fg:#7a5b00; --note-border:#e9d9a0;
   }
+  /* Dunkel gilt, wenn das System dunkel steht - es sei denn, auf t-bk.de
+     wurde ausdruecklich hell gewaehlt (assets/thema.js). */
   @media (prefers-color-scheme:dark){
-    :root{
+    :root:not([data-thema="hell"]){
       --bg:#151517; --fg:#ececec; --muted:#a0a0a0;
       --card:#1e1e21; --border:#2c2c30; --accent:#5b9bd5;
       --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
-      --note:#2a2410; --note-fg:#e0c257; --note-border:#4a3f18;
-    }
+      --note:#2a2410; --note-fg:#e0c257; --note-border:#4a3f18;}
   }
+  /* Ausdruecklich dunkel gewaehlt - auch auf einem hellen System. */
+  :root[data-thema="dunkel"]{
+      --bg:#151517; --fg:#ececec; --muted:#a0a0a0;
+      --card:#1e1e21; --border:#2c2c30; --accent:#5b9bd5;
+      --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+      --note:#2a2410; --note-fg:#e0c257; --note-border:#4a3f18;}
   *{box-sizing:border-box}
   body{
     margin:0; background:var(--bg); color:var(--fg);
@@ -42,6 +49,7 @@
   }
   .muted{color:var(--muted); font-size:14px; margin-top:32px}
 </style>
+<script src="/assets/thema.js"></script>
 </head>
 <body>
   <div class="wrap">
