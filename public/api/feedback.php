@@ -1,0 +1,107 @@
+<?php
+declare(strict_types=1);
+
+// Zentrale Feedback-Sammelstelle fuer t-bk.de.
+// Trackingfrei: keine Cookies, keine externen Dienste. Spam-Schutz per
+// signiertem Token (HMAC) + Zeitfalle + Honeypot + IP-Ratenlimit
+// (IP wird NUR gehasht gespeichert, nie im Klartext).
+//
+// GET  ?action=token  -> { ts, token }   (vor dem Absenden holen)
+// POST (form oder JSON): ts, token, hp, role, category, message, path, title
+//                     -> { ok:true } | { ok:false, error }
+
+header('Content-Type: application/json; charset=utf-8');
+header('X-Content-Type-Options: nosniff');
+header('Cache-Control: no-store');
+header('Referrer-Policy: no-referrer');
+
+$CONFIG_PATH = '/home/users/ctnutzerone/private/feedback-config.php';
+
+function out(array $data, int $code = 200): void {
+  http_response_code($code);
+  echo json_encode($data, JSON_UNESCAPED_UNICODE);
+  exit;
+}
+function fail(int $code, string $msg): void { out(['ok' => false, 'error' => $msg], $code); }
+
+if (!is_file($CONFIG_PATH)) { fail(500, 'config missing'); }
+$cfg = require $CONFIG_PATH;
+
+$MIN_SECONDS = 3;          // Zeitfalle: schneller ausgefuellt = Bot
+$MAX_SECONDS = 2 * 3600;   // Token-Gueltigkeit
+$RATE_LIMIT  = (int)($cfg['rate_limit_per_hour'] ?? 12);
+$MSG_MAX     = 2000;
+
+$ROLES      = ['schueler', 'lehrkraft'];
+$CATEGORIES = ['fehler', 'verstaendnis', 'lob', 'vorschlag', 'sonstiges'];
+
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$action = (string)($_GET['action'] ?? '');
+
+// --- Token ausgeben (stateless, HMAC ueber Zeitstempel) ---
+if ($method === 'GET' && $action === 'token') {
+  $ts = time();
+  out(['ts' => $ts, 'token' => hash_hmac('sha256', (string)$ts, (string)$cfg['hmac_secret'])]);
+}
+
+if ($method !== 'POST') { fail(405, 'method not allowed'); }
+
+// Eingaben: form-encoded ODER JSON-Body
+$in = $_POST;
+if (!$in) {
+  $j = json_decode((string)file_get_contents('php://input'), true);
+  if (is_array($j)) { $in = $j; }
+}
+
+// --- Honeypot: gefuelltes Feld = Bot. Nach aussen "ok", aber verwerfen. ---
+if (trim((string)($in['hp'] ?? '')) !== '') { out(['ok' => true]); }
+
+// --- Token + Zeitfalle ---
+$ts       = (int)($in['ts'] ?? 0);
+$token    = (string)($in['token'] ?? '');
+$expected = hash_hmac('sha256', (string)$ts, (string)$cfg['hmac_secret']);
+if ($ts <= 0 || !hash_equals($expected, $token)) { fail(400, 'bad token'); }
+$age = time() - $ts;
+if ($age < $MIN_SECONDS) { fail(429, 'too fast'); }
+if ($age > $MAX_SECONDS) { fail(400, 'token expired'); }
+
+// --- Pflichtfelder (Allowlist) ---
+$role     = (string)($in['role'] ?? '');
+$category = (string)($in['category'] ?? '');
+if (!in_array($role, $ROLES, true))         { fail(400, 'bad role'); }
+if (!in_array($category, $CATEGORIES, true)) { fail(400, 'bad category'); }
+
+// --- Freitext + Kontext (laengenbegrenzt) ---
+$message = trim((string)($in['message'] ?? ''));
+if (mb_strlen($message) > $MSG_MAX) { $message = mb_substr($message, 0, $MSG_MAX); }
+$path  = mb_substr(trim((string)($in['path']  ?? '')), 0, 300);
+$title = mb_substr(trim((string)($in['title'] ?? '')), 0, 300);
+
+// Bereich aus dem Pfad ableiten
+$area = 'start';
+if (preg_match('#^/(werkzeuge|unterrichtsmaterial|projekte)(/|$)#', $path, $m)) { $area = $m[1]; }
+
+// --- IP nur gehasht (Pseudonymisierung, ausschliesslich fuer Ratenlimit/Spam) ---
+$ip_hash = hash('sha256', ($_SERVER['REMOTE_ADDR'] ?? '') . '|' . (string)($cfg['ip_salt'] ?? ''));
+
+// --- DB ---
+try {
+  $pdo = new PDO((string)$cfg['db_dsn'], (string)$cfg['db_user'], (string)$cfg['db_pass'], [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+  ]);
+} catch (Throwable $e) { fail(500, 'db error'); }
+
+// --- Ratenlimit pro IP-Hash/Stunde ---
+$st = $pdo->prepare('SELECT COUNT(*) FROM feedback WHERE ip_hash = ? AND created_at > (NOW() - INTERVAL 1 HOUR)');
+$st->execute([$ip_hash]);
+if ((int)$st->fetchColumn() >= $RATE_LIMIT) { fail(429, 'rate limit'); }
+
+// --- Speichern ---
+$st = $pdo->prepare(
+  'INSERT INTO feedback (created_at, area, path, title, role, category, message, status, ip_hash)
+   VALUES (NOW(), ?, ?, ?, ?, ?, ?, "neu", ?)'
+);
+$st->execute([$area, $path, $title, $role, $category, $message, $ip_hash]);
+
+out(['ok' => true]);
