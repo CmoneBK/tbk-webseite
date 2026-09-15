@@ -15,7 +15,9 @@ header('X-Content-Type-Options: nosniff');
 header('Cache-Control: no-store');
 header('Referrer-Policy: no-referrer');
 
-$CONFIG_PATH = '/home/users/ctnutzerone/private/feedback-config.php';
+// Liegt in files/ (nicht private/), weil PHPs open_basedir hier nur www/, files/
+// und tmp/ erlaubt. files/ ist nicht oeffentlich erreichbar und nicht deploy-verwaltet.
+$CONFIG_PATH = '/home/users/ctnutzerone/files/feedback-config.php';
 
 function out(array $data, int $code = 200): void {
   http_response_code($code);

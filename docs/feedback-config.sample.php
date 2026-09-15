@@ -1,7 +1,8 @@
 <?php
 // VORLAGE. Kopiere diese Datei nach
-//   /home/users/ctnutzerone/private/feedback-config.php
-// (AUSSERHALB des Webroots!) und trage echte Werte ein.
+//   /home/users/ctnutzerone/files/feedback-config.php
+// (in files/, weil PHPs open_basedir nur www/, files/, tmp/ erlaubt; files/ ist
+//  nicht oeffentlich erreichbar und nicht deploy-verwaltet) und trage echte Werte ein.
 // NIEMALS ins Repo committen. Zufallswerte z. B. mit:  openssl rand -hex 32
 return [
   'db_dsn'  => 'mysql:host=localhost;dbname=DEINE_DB;charset=utf8mb4',
