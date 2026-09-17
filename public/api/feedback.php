@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+date_default_timezone_set('Europe/Berlin');
 
 // Zentrale Feedback-Sammelstelle fuer t-bk.de.
 // Trackingfrei: keine Cookies, keine externen Dienste. Spam-Schutz per
@@ -44,6 +45,67 @@ $action = (string)($_GET['action'] ?? '');
 if ($method === 'GET' && $action === 'token') {
   $ts = time();
   out(['ts' => $ts, 'token' => hash_hmac('sha256', (string)$ts, (string)$cfg['hmac_secret'])]);
+}
+
+// --- Lesen (Weg C): geschuetzte Liste NUR fuer vertrauenswuerdige Clients ---
+// GET ?action=liste  mit  Authorization: Bearer <lese_key>  ODER  ?key=<lese_key>.
+// Der Schluessel steht in feedback-config.php (files/), nie in Repo/Seite.
+// Antwort enthaelt bewusst KEINE IP / keinen ip_hash.
+if ($method === 'GET' && $action === 'liste') {
+  $key = '';
+  $hdr = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+  if (stripos($hdr, 'Bearer ') === 0) { $key = trim(substr($hdr, 7)); }
+  if ($key === '') { $key = (string)($_GET['key'] ?? ''); }
+  $expected = (string)($cfg['lese_key'] ?? '');
+  if ($expected === '' || !hash_equals($expected, $key)) { fail(401, 'unauthorized'); }
+
+  try {
+    $pdo = new PDO((string)$cfg['db_dsn'], (string)$cfg['db_user'], (string)$cfg['db_pass'], [
+      PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+      PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
+  } catch (Throwable $e) { fail(500, 'db error'); }
+
+  $limit = (int)($_GET['limit'] ?? 50);
+  if ($limit < 1) { $limit = 1; }
+  if ($limit > 200) { $limit = 200; }
+
+  $where = []; $args = [];
+  if (isset($_GET['seit']) && $_GET['seit'] !== '') {
+    $seit = (string)$_GET['seit'];
+    $ts = ctype_digit($seit) ? (int)$seit : (int)strtotime($seit);
+    if ($ts > 0) { $where[] = 'created_at > FROM_UNIXTIME(?)'; $args[] = $ts; }
+  }
+  if (isset($_GET['pfad']) && $_GET['pfad'] !== '') {
+    $p = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], (string)$_GET['pfad']);
+    $where[] = 'path LIKE ?'; $args[] = $p . '%';
+  }
+  if (isset($_GET['status']) && in_array($_GET['status'], ['neu', 'erledigt', 'spam'], true)) {
+    $where[] = 'status = ?'; $args[] = (string)$_GET['status'];
+  }
+
+  $sql = 'SELECT id, UNIX_TIMESTAMP(created_at) AS ts, role, category, message, path, title, status FROM feedback';
+  if ($where) { $sql .= ' WHERE ' . implode(' AND ', $where); }
+  $sql .= ' ORDER BY id DESC LIMIT ' . $limit;   // $limit ist int und geklemmt
+  $st = $pdo->prepare($sql);
+  $st->execute($args);
+
+  $eintraege = []; $neuestes = null;
+  foreach ($st->fetchAll() as $r) {
+    $iso = date('c', (int)$r['ts']);
+    if ($neuestes === null) { $neuestes = $iso; }   // DESC -> erster ist der neueste
+    $eintraege[] = [
+      'id'        => (int)$r['id'],
+      'zeit'      => $iso,
+      'rolle'     => $r['role'],
+      'kategorie' => $r['category'],
+      'nachricht' => $r['message'],
+      'pfad'      => $r['path'],
+      'titel'     => $r['title'],
+      'status'    => $r['status'],
+    ];
+  }
+  out(['ok' => true, 'anzahl' => count($eintraege), 'neuestes' => $neuestes, 'eintraege' => $eintraege]);
 }
 
 if ($method !== 'POST') { fail(405, 'method not allowed'); }
