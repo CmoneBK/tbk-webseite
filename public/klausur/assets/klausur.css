@@ -90,10 +90,42 @@ td.zahl, th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
 .fussnote { font-size: 12.5px; color: var(--muted); }
 
 /* Die Fragen in der Teilnahme. */
+/* ---------- Fragenpool: Filter und Auswahl ---------- */
+.filter { border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; margin: 0 0 14px; background: var(--bg); }
+.filterGitter { display: grid; gap: 4px 14px;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); }
+.filterGitter label { margin-top: 8px; }
+.filterGitter select, .filterGitter input { max-width: none; }
+
+/* Die Ueberschrift sagt, wo im Material man gerade ist - dieselben
+   Ebenen, nach denen der Filter fragt. */
+.poolBereich { margin: 20px 0 0; font-size: 12px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.poolThema { display: flex; justify-content: space-between; align-items:
+  baseline; gap: 12px; margin: 4px 0 8px; padding-bottom: 4px;
+  border-bottom: 1px solid var(--border); }
+.poolThema span { font-size: 12.5px; font-weight: 400; color: var(--muted);
+  white-space: nowrap; }
+
+.poolFrage { margin: 8px 0 14px; padding: 6px 8px; border-radius: 9px;
+  border-left: 3px solid transparent; }
+/* Was schon in der Klausur steht, soll man beim Blaettern sehen. */
+.poolFrage.drin { border-left-color: var(--ok, #127c2f);
+  background: var(--card); }
+.poolOptionen { margin: 2px 0 0 26px; }
+.istRichtig { color: #127c2f; font-weight: 600; }
+
 .frage { background: var(--card); border: 1px solid var(--border);
   border-radius: 12px; padding: 14px 16px; margin: 14px 0; }
 .frage > .kopf { font-size: 12.5px; color: var(--muted); margin-bottom: 4px; }
 .frage > .text { font-weight: 600; margin: 0 0 10px; }
+/* Ein Bild zur Aufgabe. Weisser Grund, weil die Zeichnungen mit
+   dunkler Linie auf hellem Grund gedacht sind - auch im dunklen Thema. */
+.aufgabenbild { display: block; width: 100%; max-width: 380px; height: auto;
+  margin: 0 0 12px; background: #fff; border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px; box-sizing: border-box; }
+
 .frage .option { display: flex; gap: 10px; align-items: flex-start;
   padding: 7px 9px; border-radius: 8px; cursor: pointer; }
 .frage .option:hover { background: var(--bg); }

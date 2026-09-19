@@ -27,6 +27,14 @@
 
   function el(id) { return document.getElementById(id); }
 
+  /* UTF-8 nach Base64. btoa allein kann nur Latin-1, und in den Bildern
+     stehen Umlaute und das Gradzeichen. */
+  function zuBase64(s) {
+    var bytes = new TextEncoder().encode(s), roh = '';
+    for (var i = 0; i < bytes.length; i++) { roh += String.fromCharCode(bytes[i]); }
+    return btoa(roh);
+  }
+
   function sagen(knoten, art, text) {
     knoten.className = 'meldung ' + art;
     knoten.textContent = text;
@@ -111,6 +119,7 @@
       gezeigt.push({
         text: a.text,
         anzahl: a.anzahl,
+        bild: a.bild || '',
         optionen: pos.map(function (o) { return a.optionen[o]; })
       });
     });
@@ -175,6 +184,17 @@
       text.className = 'text';
       text.textContent = frage.text;
       kasten.appendChild(text);
+
+      /* Als <img> mit data:-URL, nicht als eingesetztes SVG. In einem
+         <img> läuft kein Skript und es wird nichts nachgeladen - was die
+         Lehrkraft aus ihrem Pool schickt, bleibt damit ein Bild. */
+      if (frage.bild) {
+        var bild = document.createElement('img');
+        bild.className = 'aufgabenbild';
+        bild.alt = 'Bild zur Aufgabe';
+        bild.src = 'data:image/svg+xml;base64,' + zuBase64(frage.bild);
+        kasten.appendChild(bild);
+      }
 
       frage.optionen.forEach(function (option, j) {
         var zeile = document.createElement('label');

@@ -36,7 +36,8 @@ return [
   // ---- Grenzen -----------------------------------------------------------
   'max_klausuren_je_lehrkraft' => 40,
   'max_codes_je_klausur'       => 40,
-  'max_fragen_bytes'           => 262144,   // 256 KB Fragentext je Klausur
+  'max_fragen_bytes'           => 524288,   // 512 KB Fragentext je Klausur
+  'max_bild_bytes'             => 24576,    // 24 KB je SVG-Bild einer Frage
   'max_chiffre_bytes'          => 262144,   // 256 KB je Abgabe
   'max_tage'                   => 60,       // Obergrenze der Aufbewahrung
 

@@ -132,6 +132,72 @@
           aufnehmen. Darunter wählst du, welche Antworten erscheinen &ndash;
           richtige wie falsche. Fünf sind vorausgewählt; im Pool stehen oft
           mehr zum Tauschen bereit.</p>
+        <div class="filter">
+          <p class="fussnote" style="margin:0 0 8px">Vier Ebenen, von grob
+            nach fein &ndash; dieselbe Ordnung wie im Material. Jede Ebene
+            zeigt nur, was nach der Ebene darüber noch übrig ist.</p>
+          <div class="filterGitter">
+            <div>
+              <label for="fBereich">Bereich</label>
+              <select id="fBereich"><option value="">alle</option></select>
+            </div>
+            <div>
+              <label for="fUnter">Unterkategorie</label>
+              <select id="fUnter"><option value="">alle</option></select>
+            </div>
+            <div>
+              <label for="fEinheit">Einheit</label>
+              <select id="fEinheit"><option value="">alle</option></select>
+            </div>
+            <div>
+              <label for="fThema">Thema</label>
+              <select id="fThema"><option value="">alle</option></select>
+            </div>
+          </div>
+          <div class="filterGitter">
+            <div>
+              <label for="fSuche">Suchen</label>
+              <input type="text" id="fSuche" autocomplete="off"
+                placeholder="in Frage und Antworten, z.&nbsp;B. Rautiefe">
+            </div>
+            <div>
+              <label for="fBild">Bild</label>
+              <select id="fBild">
+                <option value="">egal</option>
+                <option value="mit">nur Fragen mit Bild</option>
+                <option value="ohne">nur Fragen ohne Bild</option>
+              </select>
+            </div>
+            <div>
+              <label for="fPunkte">Punktwert</label>
+              <select id="fPunkte">
+                <option value="">egal</option>
+                <option value="1">1 Punkt (nur eine richtig)</option>
+                <option value="2">2 Punkte</option>
+                <option value="3">3 Punkte</option>
+                <option value="4">4 und mehr</option>
+              </select>
+            </div>
+            <div>
+              <label for="fReserve">Antworten in Reserve</label>
+              <select id="fReserve">
+                <option value="">egal</option>
+                <option value="2">mindestens zwei zum Tauschen</option>
+              </select>
+            </div>
+          </div>
+          <p style="margin:10px 0 0">
+            <button type="button" class="leise" id="btnSichtbarAn">Sichtbare
+              aufnehmen</button>
+            <button type="button" class="leise" id="btnSichtbarAus">Sichtbare
+              herausnehmen</button>
+            <button type="button" class="leise" id="btnWahlLeeren">Auswahl
+              aufheben</button>
+            <button type="button" class="leise" id="btnFilterWeg">Filter
+              zurücksetzen</button>
+          </p>
+          <p class="fussnote" id="filterStand" style="margin:8px 0 0"></p>
+        </div>
         <label class="option"><input type="checkbox" id="loesungenZeigen">
           Antworten und Lösung anzeigen</label>
         <div class="meldung" id="meldungPool" hidden></div>

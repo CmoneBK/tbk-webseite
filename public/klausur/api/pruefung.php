@@ -48,7 +48,8 @@ $NUR_CODES  = (array)($cfg['nur_codes'] ?? []);
 $NUR_EINL   = (array)($cfg['nur_einladungen'] ?? []);
 $MAX_KLAUS  = (int)($cfg['max_klausuren_je_lehrkraft'] ?? 40);
 $MAX_CODES  = (int)($cfg['max_codes_je_klausur'] ?? 40);
-$MAX_FRAGEN = (int)($cfg['max_fragen_bytes'] ?? 262144);
+$MAX_FRAGEN = (int)($cfg['max_fragen_bytes'] ?? 524288);
+$MAX_BILD   = (int)($cfg['max_bild_bytes'] ?? 24576);
 $MAX_CHIFFRE = (int)($cfg['max_chiffre_bytes'] ?? 262144);
 $MAX_TAGE   = (int)($cfg['max_tage'] ?? 60);
 
@@ -286,6 +287,24 @@ if ($action === 'klausur_anlegen') {
         || $frage['anzahl'] >= count($frage['optionen'])) { fail('ungueltig', 400); }
     foreach (['richtig', 'loesung', 'korrekt'] as $verraeter) {
       if (array_key_exists($verraeter, $frage)) { fail('ungueltig', 400); }
+    }
+    /* Ein Bild zur Frage ist erlaubt - aber nur als SVG-Quelltext, nur in
+       Groessen, die eine Klausur nicht sprengen, und ohne alles, was ein
+       SVG zu mehr als einem Bild machen wuerde. Der Teilnehmerbrowser
+       stellt es ohnehin in einem <img> dar, in dem kein Skript laeuft.
+       Geprueft wird hier trotzdem: Was der Server nicht annimmt, kann er
+       auch nicht weiterreichen. */
+    if (array_key_exists('bild', $frage)) {
+      $b = $frage['bild'];
+      if (!is_string($b) || strlen($b) > $MAX_BILD) { fail('ungueltig', 400); }
+      if (substr($b, 0, 4) !== '<svg' || substr(rtrim($b), -6) !== '</svg>') {
+        fail('ungueltig', 400);
+      }
+      foreach (['<script', 'javascript:', 'onload=', 'onclick=', 'onerror=',
+                'xlink:href', '<foreignobject', '<use', '<image',
+                '<animate', '<set', '<iframe'] as $gift) {
+        if (stripos($b, $gift) !== false) { fail('ungueltig', 400); }
+      }
     }
   }
 

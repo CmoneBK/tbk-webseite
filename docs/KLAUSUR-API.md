@@ -159,11 +159,21 @@ Frage (siehe `docs/klausur-fragenpool.beispiel.json`):
 
 ```json
 { "thema": "…", "text": "…",
+  "pfad": ["Bereich", "Unterkategorie", "Einheit", "Thema"],
   "optionen": ["…", "…", …],   // gern MEHR als fünf
   "richtig":  [0, 2, 4],       // Indizes in "optionen"
-  "standard": [0, 1, 2, 3, 4]  // optional: was vorausgewählt erscheint
+  "standard": [0, 1, 2, 3, 4], // optional: was vorausgewählt erscheint
+  "bild": "<svg …>…</svg>"     // optional: ein Bild zur Frage
 }
 ```
+
+`pfad` ordnet die Frage im Material ein und ist die Grundlage des Filters,
+mit dem die Lehrkraft ihre Klausur zusammenstellt. Die drei oberen Ebenen
+sind nicht neu erfunden: `daten/kategorien.csv` des Materialrepos nennt
+Bereich und Unterkategorie, die `info.json` der Einheiten die Einheit. Die
+vierte Ebene ist das Thema der Frage. Fehlt `pfad`, fällt die Oberfläche auf
+`thema` zurück und bekommt daraus zwei Ebenen statt vier — ein alter
+Poolstand bleibt also benutzbar.
 
 `standard` ist optional; fehlt es, wählt die Oberfläche alle richtigen plus so
 viele falsche vor, bis fünf zusammenkommen. Beim Zusammenstellen wählt die
@@ -186,6 +196,23 @@ diese Regeln nicht** — er prüft nur ihre Form und gibt sie unverändert an de
 Teilnehmer-Browser weiter. Beim Objekt sind ausschließlich die Schlüssel `v`,
 `mischen`, `aufgaben` erlaubt; in einer Aufgabe sind `richtig`, `loesung`,
 `korrekt` weiterhin verboten (sonst läge ein Lösungshinweis im Klartext).
+
+`bild` ist optional und gehört zur **Frage**, nicht zu einer Antwort — es
+übersteht damit auch das Mischen der Optionen. Erlaubt ist ausschließlich
+SVG-Quelltext: Der Server nimmt nur an, was mit `<svg` beginnt und mit
+`</svg>` endet, höchstens `max_bild_bytes` groß ist (voreingestellt 24 KB)
+und keines der Stücke `<script`, `javascript:`, `onload=`, `onclick=`,
+`onerror=`, `xlink:href`, `<foreignObject`, `<use`, `<image`, `<animate`,
+`<set`, `<iframe` enthält. Der Teilnehmer-Browser stellt es als
+`<img src="data:image/svg+xml;base64,…">` dar und **nie** als eingesetztes
+SVG: In einem `<img>` läuft kein Skript, und die Grafik kann nichts
+nachladen. Die Prüfung auf dem Server ist damit nicht die einzige Sperre,
+sondern die zweite — weitergereicht wird nur, was auch angenommen wurde.
+
+Bilder gehen in den Klartextteil ein und zählen gegen `max_fragen_bytes`
+(voreingestellt 512 KB). Vierzig Bildfragen aus dem vorhandenen Pool sind
+rund 47 KB — die Grenze ist also keine praktische Beschränkung, solange
+die Bilder gezeichnete SVG bleiben und keine eingebetteten Fotos.
 
 **Mischen und Teilmenge sind reine Präsentation, kein Täuschungsschutz.** Sie
 erschweren das Abschreiben zwischen Sitznachbarn; gegen einen zweiten Tab oder

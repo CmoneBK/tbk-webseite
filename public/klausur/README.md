@@ -33,9 +33,18 @@ Nicht hier, mit Absicht:
   Eine Frage darf **mehr als fünf Antworten** anbieten; ein optionales Feld
   `standard` bestimmt, welche vorausgewählt erscheinen (sonst: alle richtigen
   plus falsche bis fünf).
+  Ein optionales Feld `bild` nimmt SVG-Quelltext auf; `pfad` ordnet die
+  Frage in vier Ebenen ein und speist den Filter (siehe unten).
 
 ## Was die Lehrkraft beim Zusammenstellen einstellt
 
+* **Filter über dem Pool** — vier Ebenen in der Ordnung des Materials
+  (Bereich, Unterkategorie, Einheit, Thema), dazu Volltextsuche in Frage
+  und Antworten, Bild, Punktwert und Antworten in Reserve. Jede Ebene zeigt
+  nur, was nach der Ebene darüber übrig ist.
+  Die **Auswahl hängt nicht am Filter**: Wer zu einem Thema auswählt und
+  dann das Thema wechselt, behält das Gewählte. Eine Zeile unter dem Filter
+  sagt, wie viele gewählte Aufgaben gerade außerhalb des Filters liegen.
 * **Antworten je Frage** — welche richtigen und falschen Optionen aus dem Pool
   tatsächlich in der Klausur stehen. `anzahl` und Lösungsschlüssel werden aus
   der Auswahl neu berechnet.

@@ -1,6 +1,8 @@
 [
   {
     "thema": "Fügeverfahren: Prinzipien",
+    "pfad": ["Fertigungstechnik", "Fügeverfahren",
+             "Die Verfahren im Überblick", "Prinzipien"],
     "text": "Welche Verbindungen sind formschlüssig?",
     "optionen": [
       "Passfederverbindung",
@@ -18,6 +20,8 @@
   },
   {
     "thema": "Fügeverfahren: Prinzipien",
+    "pfad": ["Fertigungstechnik", "Fügeverfahren",
+             "Die Verfahren im Überblick", "Prinzipien"],
     "text": "Welche Aussage über den Stoffschluss trifft zu?",
     "optionen": [
       "Er lässt sich zerstörungsfrei lösen.",
@@ -33,6 +37,8 @@
   },
   {
     "thema": "Wälzlager: Umlaufverhältnis",
+    "pfad": ["Maschinenelemente", "Lager",
+             "Wälzlager und Lagerungen", "Umlaufverhältnis"],
     "text": "Eine Getriebewelle dreht, die Zahnkraft behält ihre Richtung. Was gilt?",
     "optionen": [
       "Der Innenring hat Umfangslast.",
@@ -47,6 +53,8 @@
   },
   {
     "thema": "Wälzlager: Schadensbilder",
+    "pfad": ["Maschinenelemente", "Lager",
+             "Wälzlager und Lagerungen", "Schadensbilder"],
     "text": "Gleichmäßig verteilte Eindrücke im Abstand der Wälzkörper – woher kommen sie?",
     "optionen": [
       "Die Montagekraft lief über die Wälzkörper.",
@@ -60,6 +68,8 @@
   },
   {
     "thema": "Drehprozess: Werkzeug",
+    "pfad": ["Fertigungstechnik", "Zerspanung",
+             "Planung eines Drehprozesses", "Werkzeug"],
     "text": "Welche Angaben stehen in der Bezeichnung einer Wendeschneidplatte nach DIN ISO 1832?",
     "optionen": [
       "Grundform",
@@ -76,6 +86,8 @@
   },
   {
     "thema": "Schweißen: Sinnbilder",
+    "pfad": ["Fertigungstechnik", "Fügeverfahren",
+             "Schweißen", "Sinnbilder"],
     "text": "Die Naht ist mit einer Strichlinie unter der Bezugslinie eingetragen. Was heißt das?",
     "optionen": [
       "Die Naht liegt auf der Pfeilseite.",
