@@ -252,6 +252,7 @@
     pool = a.pool || [];
     m.hidden = true;
     ebenenFuellen();
+    quellenFuellen();
     poolZeichnen();
   }
 
@@ -326,6 +327,16 @@
     return [OHNE, OHNE, kopf, t.join(':').trim()];
   }
 
+  /* Woher die Frage stammt: dreiteilig, "Training · Einheit ·
+     Seite". Fragen ohne dieses Feld stammen aus den Lektionen und
+     Werkzeugen - das ist keine Lücke, sondern der Normalfall. Ein
+     älterer Poolstand kennt das Feld gar nicht; dann gilt für alle
+     Fragen dasselbe, und der Filter steht still. */
+  function quelleVon(f) {
+    var q = String(f.quelle || '').split(' · ');
+    return q.length === 3 ? q : null;
+  }
+
   /* Der Anforderungsbereich einer Frage: I, II oder III. Ein aelterer
      Poolstand kennt das Feld nicht - dann gilt 0 und die Frage zaehlt
      unter "ohne Einstufung". Lieber eine ehrliche Luecke als eine
@@ -363,6 +374,11 @@
      die Frage finden, bei der das Wort nur in einer Option steht. */
   function trifft(f, such) {
     if (String(f.text).toLowerCase().indexOf(such) !== -1) { return true; }
+    /* Auch die Herkunft: Wer "Pfeilseite" eingibt, sucht oft das
+       Training dieses Namens und nicht das Wort in einer Frage. */
+    if (String(f.quelle || '').toLowerCase().indexOf(such) !== -1) {
+      return true;
+    }
     for (var o = 0; o < f.optionen.length; o++) {
       if (String(f.optionen[o]).toLowerCase().indexOf(such) !== -1) { return true; }
     }
@@ -376,6 +392,7 @@
     var punkte = el('fPunkte').value;
     var reserve = el('fReserve').value;
     var stufe = el('fAfb').value;
+    var herkunft = el('fQuelle').value;
     var stufen = EBENEN.map(function (id) { return el(id).value; });
     var raus = [];
     pool.forEach(function (f, i) {
@@ -386,6 +403,13 @@
       if (bild === 'mit' && !f.bild) { return; }
       if (bild === 'ohne' && f.bild) { return; }
       if (stufe && String(afbVon(f, i)) !== stufe) { return; }
+      if (herkunft) {
+        var q = quelleVon(f);
+        if (herkunft === 'training' && !q) { return; }
+        if (herkunft === 'lektion' && q) { return; }
+        if (herkunft.indexOf('t:') === 0
+            && (!q || q[1] !== herkunft.slice(2))) { return; }
+      }
       /* Ein Punkt je richtiger Antwort - so rechnet bewertung.js. */
       var n = (f.richtig || []).length;
       if (punkte === '4' && n < 4) { return; }
@@ -430,6 +454,31 @@
     });
   }
 
+  /* Die Quellenliste füllen. Sie steht neben den vier Ebenen und
+     zählt mit, wie viele Fragen jeweils dahinterstehen - eine Einheit
+     mit drei Fragen ist etwas anderes als eine mit dreissig. */
+  function quellenFuellen() {
+    var sel = el('fQuelle');
+    var wahl = sel.value;
+    var ausT = 0, ausL = 0, je = {};
+    pool.forEach(function (f) {
+      var q = quelleVon(f);
+      if (q) { ausT++; je[q[1]] = (je[q[1]] || 0) + 1; } else { ausL++; }
+    });
+    sel.textContent = '';
+    sel.appendChild(neueOption('', 'alle (' + pool.length + ')'));
+    if (!ausT) { sel.value = ''; return; }
+    sel.appendChild(neueOption('training', 'aus Trainings (' + ausT + ')'));
+    sel.appendChild(neueOption('lektion',
+      'aus Lektionen und Werkzeugen (' + ausL + ')'));
+    Object.keys(je).sort().forEach(function (e) {
+      sel.appendChild(neueOption('t:' + e,
+        '  Training ' + e + '  (' + je[e] + ')'));
+    });
+    sel.value = wahl;
+    if (sel.value !== wahl) { sel.value = ''; }
+  }
+
   function filterNeu() {
     ebenenFuellen();
     poolZeichnen();
@@ -438,6 +487,7 @@
   EBENEN.forEach(function (id) {
     el(id).addEventListener('change', filterNeu);
   });
+  el('fQuelle').addEventListener('change', poolZeichnen);
   el('fBild').addEventListener('change', poolZeichnen);
   el('fPunkte').addEventListener('change', poolZeichnen);
   el('fReserve').addEventListener('change', poolZeichnen);
@@ -455,6 +505,7 @@
     el('fPunkte').value = '';
     el('fReserve').value = '';
     el('fAfb').value = '';
+    el('fQuelle').value = '';
     filterNeu();
   });
 
@@ -569,6 +620,18 @@
     });
     marke.addEventListener('click', function (e) { e.preventDefault(); });
     sp.appendChild(marke);
+    /* Stammt die Frage aus einem Training, steht es an ihr. Die
+       Lehrkraft sieht dann beim Zusammenstellen, was die Klasse geuebt
+       hat - und was nicht. Welche Seite es war, sagt der Tooltip; im
+       Kasten waere der ganze Name zu lang. */
+    var qu = quelleVon(f);
+    if (qu) {
+      var qm = document.createElement('span');
+      qm.className = 'quellMarke';
+      qm.textContent = 'Training';
+      qm.title = qu[1] + ' · ' + qu[2];
+      sp.appendChild(qm);
+    }
     var stark = document.createElement('strong');
     stark.textContent = f.text;
     sp.appendChild(stark);

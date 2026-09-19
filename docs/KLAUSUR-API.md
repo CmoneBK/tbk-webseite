@@ -161,6 +161,7 @@ Frage (siehe `docs/klausur-fragenpool.beispiel.json`):
 { "thema": "…", "text": "…",
   "pfad": ["Bereich", "Unterkategorie", "Einheit", "Thema"],
   "afb": 2,                    // 1, 2 oder 3
+  "quelle": "Training · Wälzlager · Bauform und Kurzzeichen",
   "bild_hilfe": true,          // optional: Bild nur auf Wunsch mitgeben
   "optionen": ["…", "…", …],   // gern MEHR als fünf
   "richtig":  [0, 2, 4],       // Indizes in "optionen"
@@ -182,6 +183,22 @@ Frage**. Wer sie anders sieht, ändert sie im Pool — oder, für einen einzelne
 Durchgang, direkt an der Frage in der Oberfläche. Filter und Auswertung
 rechnen dann mit der geänderten Stufe, denn sonst zeigte die Statistik etwas
 anderes an als der Bildschirm.
+
+`quelle` sagt, woher die Frage stammt, und ist **dreiteilig**, getrennt
+durch ` · `: Art, Einheit, Seite — etwa
+`Training · Wälzlager · Bauform und Kurzzeichen`. Das Feld ist **optional**;
+fehlt es, stammt die Frage aus den Lektionen und Werkzeugen, und das ist der
+Normalfall. Die Lehrkraftansicht macht daraus zweierlei: eine Marke
+„Training" an der Frage (die Seite steht im Tooltip) und einen Filter
+„Herkunft" — alle, nur aus Trainings, nur aus Lektionen, oder eine einzelne
+Trainingseinheit. Auch die Volltextsuche durchsucht dieses Feld, damit sich
+ein Training an seinem Namen finden lässt.
+
+Warum das mehr ist als Buchhaltung: Wer ein Training durchgearbeitet hat,
+hatte genau diese Unterscheidungen in der Hand. Dieselbe Frage prüft
+deshalb bei zwei Klassen Verschiedenes, je nachdem, ob sie das Training
+kennen. Die Lehrkraft soll das beim Zusammenstellen sehen können. In die
+Klausur selbst geht `quelle` **nicht** mit — sie steht nur im Pool.
 
 `bild_hilfe` unterscheidet zwei Arten von Bild. Ein Bild **ohne** dieses Feld
 gehört zur Frage — ohne es ist sie nicht zu beantworten, und es geht

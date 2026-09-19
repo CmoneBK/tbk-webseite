@@ -103,5 +103,25 @@
     ],
     "anzahl": 1,
     "richtig": [1]
+  },
+  {
+    "thema": "Schweißen: Nahtmaße",
+    "afb": 2,
+    "pfad": ["Fertigungstechnik", "Fügeverfahren",
+             "Schweißen", "Nahtmaße"],
+    "quelle": "Training · Schweißen · a und z umrechnen",
+    "text": "Wie hängen a und z an der Kehlnaht zusammen?",
+    "optionen": [
+      "a = z · cos 45°",
+      "z = a · √2",
+      "gerundet: a ≈ 0,7 · z und z ≈ 1,4 · a",
+      "a = z · √2",
+      "z = a · cos 45°",
+      "a = z / 2",
+      "a und z sind gleich groß."
+    ],
+    "anzahl": 3,
+    "richtig": [0, 1, 2],
+    "standard": [0, 1, 2, 3, 4]
   }
 ]

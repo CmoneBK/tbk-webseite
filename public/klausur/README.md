@@ -39,14 +39,21 @@ Nicht hier, mit Absicht:
   3 Beurteilen) — eine didaktische Einschätzung, die im Pool steht und
   dort auch geändert wird. `bild_hilfe` kennzeichnet ein Bild, das die
   Frage nur erklärt und sie nicht löst; ein solches Bild geht nur auf
-  Wunsch mit.
+  Wunsch mit. `quelle` nennt dreiteilig die Herkunft
+  (`Training · Einheit · Seite`); fehlt sie, stammt die Frage aus den
+  Lektionen.
 
 ## Was die Lehrkraft beim Zusammenstellen einstellt
 
 * **Filter über dem Pool** — vier Ebenen in der Ordnung des Materials
   (Bereich, Unterkategorie, Einheit, Thema), dazu Volltextsuche in Frage
-  und Antworten, Bild, Punktwert und Antworten in Reserve. Jede Ebene zeigt
-  nur, was nach der Ebene darüber übrig ist.
+  und Antworten, Bild, Punktwert, Antworten in Reserve und Herkunft. Jede
+  Ebene zeigt nur, was nach der Ebene darüber übrig ist.
+  Der Filter **Herkunft** trennt Fragen aus den Trainings von denen aus den
+  Lektionen und lässt eine einzelne Trainingseinheit herausgreifen. Fragen
+  aus einem Training tragen dazu die Marke „Training"; welche Seite es war,
+  sagt der Tooltip. So ist beim Zusammenstellen zu sehen, was die Klasse
+  geübt hat und was nicht.
   Die **Auswahl hängt nicht am Filter**: Wer zu einem Thema auswählt und
   dann das Thema wechselt, behält das Gewählte. Eine Zeile unter dem Filter
   sagt, wie viele gewählte Aufgaben gerade außerhalb des Filters liegen.
