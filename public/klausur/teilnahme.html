@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Prüfung · t-bk.de</title>
+<link rel="stylesheet" href="assets/klausur.css">
+</head>
+<body>
+
+<header class="wrap">
+  <p class="herkunft">t-bk.de</p>
+  <h1>Prüfung</h1>
+  <p class="lead">Code und PIN stehen auf dem Zettel, den du bekommen hast.</p>
+</header>
+
+<main class="wrap">
+
+  <!-- ============================ Anmelden ============================ -->
+  <section id="schrittAnmelden">
+    <div class="box">
+      <label for="tcode">Code</label>
+      <input type="text" id="tcode" class="schmal code" maxlength="6"
+             autocomplete="off" autocapitalize="characters" spellcheck="false"
+             inputmode="text">
+
+      <label for="tpin">PIN</label>
+      <input type="password" id="tpin" class="schmal code" maxlength="6"
+             autocomplete="off" inputmode="numeric">
+
+      <div class="knopfzeile">
+        <button type="button" id="btnStart">Prüfung beginnen</button>
+      </div>
+      <p class="fussnote" style="margin-top:12px">
+        Der Code gilt <strong>einmal</strong>. Wer die Seite schließt, kommt
+        nicht von selbst wieder herein &ndash; dann hilft nur die Lehrkraft.
+      </p>
+      <div class="meldung" id="meldungAnmelden" hidden></div>
+    </div>
+
+    <div class="box">
+      <h3 style="margin-top:0">Was gespeichert wird</h3>
+      <p class="fussnote" style="margin:0">
+        Kein Name, keine Klasse, keine Schule &ndash; es gibt kein Feld dafür.
+        Gespeichert werden nur dein Code und deine Antworten, und die
+        Antworten sind dabei so verschlüsselt, dass ausschließlich deine
+        Lehrkraft sie öffnen kann. Wer die Zuordnung von Code zu Name hat,
+        weiß nur sie; diese Seite kennt sie nicht.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================= Fragen ============================= -->
+  <section id="schrittFragen" hidden>
+    <div class="box" id="hinweisOben">
+      <strong>So wird gekreuzt:</strong> Bei jeder Aufgabe steht, wie viele
+      Antworten stimmen. Mehr geht nicht &ndash; wenn du so viele angekreuzt
+      hast, musst du erst eines wieder abwählen.
+    </div>
+
+    <div id="fragen"></div>
+
+    <div class="box">
+      <p id="standZeile" class="fussnote" style="margin:0 0 10px"></p>
+      <div class="knopfzeile">
+        <button type="button" id="btnAbgeben">Abgeben</button>
+      </div>
+      <p class="fussnote" style="margin-top:10px">
+        Nach dem Abgeben lässt sich nichts mehr ändern.
+      </p>
+      <div class="meldung" id="meldungAbgeben" hidden></div>
+    </div>
+  </section>
+
+  <!-- ============================== Fertig ============================ -->
+  <section id="schrittFertig" hidden>
+    <div class="box gut">
+      <h2 style="border:0; padding:0; margin:0 0 8px">Abgegeben</h2>
+      <p style="margin:0">Deine Antworten sind angekommen. Du kannst die
+        Seite jetzt schließen.</p>
+      <p class="fussnote" style="margin:10px 0 0">
+        Ein Ergebnis steht hier nicht &ndash; diese Seite kennt die richtigen
+        Antworten nicht. Die Auswertung macht deine Lehrkraft.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  &copy; 2026 t-bk.de &middot; <a href="/impressum.html">Impressum</a> &middot;
+  <a href="/datenschutz.html">Datenschutz</a>
+</footer>
+
+<script src="assets/krypto.js"></script>
+<script src="assets/teilnahme.js"></script>
+</body>
+</html>

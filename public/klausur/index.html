@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Klausurbereich · t-bk.de</title>
+<link rel="stylesheet" href="assets/klausur.css">
+</head>
+<body>
+
+<header class="wrap">
+  <p class="herkunft">t-bk.de &middot; nicht freigegeben</p>
+  <h1>Klausurbereich</h1>
+  <p class="lead">Multiple-Choice-Prüfungen zusammenstellen, durchführen und
+    auswerten &ndash; ohne dass der Server Namen, Antworten oder Punkte
+    sieht.</p>
+</header>
+
+<main class="wrap">
+
+  <div class="box warnung" id="bauhinweis">
+    <strong>Gebaut, nicht in Betrieb.</strong> Dieser Bereich ist nirgends
+    verlinkt, trägt <code>noindex</code> und braucht einen von Hand
+    vergebenen Einladungscode. Vor dem ersten echten Einsatz fehlen die
+    Verträge mit den Schulen &ndash; siehe <code>docs/KLAUSUR-API.md</code>,
+    Abschnitt 9.
+  </div>
+
+  <!-- ============================ Anmelden ============================ -->
+  <section id="schrittAnmelden">
+    <h2>Anmelden</h2>
+    <div class="box">
+      <label for="lcode">Zugangscode</label>
+      <input type="text" id="lcode" class="schmal code" maxlength="8"
+             autocomplete="off" autocapitalize="characters" spellcheck="false">
+
+      <label for="lpass">Passphrase</label>
+      <input type="password" id="lpass" autocomplete="current-password">
+
+      <div class="knopfzeile">
+        <button type="button" id="btnAnmelden">Anmelden</button>
+        <button type="button" class="leise" id="btnZeigNeu">Zugang anlegen</button>
+      </div>
+      <div class="meldung" id="meldungAnmelden" hidden></div>
+    </div>
+
+    <div class="box" id="kastenNeu" hidden>
+      <h3 style="margin-top:0">Zugang anlegen</h3>
+      <p class="fussnote">Den Einladungscode gibt es auf Anfrage von der
+        dienstlichen Adresse der Schule. Eine Schulbescheinigung per E-Mail
+        wird <strong>nicht</strong> verlangt &ndash; ein unverschlüsselt
+        zugesandtes Dokument mit Name und Unterschrift wäre mehr
+        Datenverarbeitung, nicht weniger.</p>
+
+      <label for="neinladung">Einladungscode</label>
+      <input type="text" id="neinladung" class="schmal code" maxlength="10"
+             autocomplete="off" autocapitalize="characters" spellcheck="false">
+
+      <label for="npass">Passphrase</label>
+      <input type="password" id="npass" autocomplete="new-password">
+      <p class="fussnote" id="staerke">&nbsp;</p>
+
+      <label for="npass2">Passphrase wiederholen</label>
+      <input type="password" id="npass2" autocomplete="new-password">
+
+      <div class="box ernst" style="margin-top:16px">
+        <strong>Eine vergessene Passphrase ist das Ende.</strong> Aus ihr
+        entsteht der Schlüssel, mit dem die Abgaben geöffnet werden. Der
+        Server kennt sie nicht und kann sie nicht zurücksetzen &ndash; das
+        ist der Punkt der Sache. Vier zufällige Wörter sind besser als jedes
+        Muster mit Sonderzeichen.
+      </div>
+
+      <div class="knopfzeile">
+        <button type="button" id="btnNeu">Zugang anlegen</button>
+      </div>
+      <div class="meldung" id="meldungNeu" hidden></div>
+    </div>
+  </section>
+
+  <!-- =========================== Angemeldet =========================== -->
+  <section id="schrittBereich" hidden>
+    <h2>Klausuren <span class="fussnote" id="werBinIch"></span></h2>
+
+    <div class="box">
+      <div class="rahmen">
+        <table>
+          <thead><tr>
+            <th>Titel</th><th>Stand</th><th class="zahl">Codes</th>
+            <th class="zahl">Abgaben</th><th>gelöscht am</th><th></th>
+          </tr></thead>
+          <tbody id="liste"></tbody>
+        </table>
+      </div>
+      <div class="knopfzeile">
+        <button type="button" class="leise" id="btnListe">Neu laden</button>
+        <button type="button" id="btnZeigAnlegen">Klausur zusammenstellen</button>
+        <button type="button" class="leise" id="btnAbmelden">Abmelden</button>
+      </div>
+      <div class="meldung" id="meldungListe" hidden></div>
+    </div>
+
+    <!-- --------------------- Zusammenstellen --------------------- -->
+    <div id="kastenAnlegen" hidden>
+      <h2>Zusammenstellen</h2>
+      <div class="box">
+        <label for="ktitel">Titel (nur für dich sichtbar)</label>
+        <input type="text" id="ktitel" maxlength="80"
+               placeholder="z. B. Wälzlager, erste Klausur">
+        <p class="fussnote">Der Titel wird verschlüsselt gespeichert. Die
+          Klasse sieht ihn nicht &ndash; und der Server auch nicht.</p>
+
+        <label for="kverfahren">Bewertung</label>
+        <select id="kverfahren"></select>
+        <p class="fussnote" id="verfahrenText"></p>
+
+        <label for="ktage">Aufbewahrung in Tagen (1 bis 60)</label>
+        <input type="number" id="ktage" class="schmal" min="1" max="60" value="30">
+        <p class="fussnote">Danach löscht der Server die Klausur samt allen
+          Abgaben. Die Frist wird nie verlängert.</p>
+      </div>
+
+      <div class="box">
+        <h3 style="margin-top:0">Fragen</h3>
+        <div class="meldung" id="meldungPool" hidden></div>
+        <div id="pool"></div>
+        <p class="fussnote" id="poolStand"></p>
+      </div>
+
+      <div class="box">
+        <div class="knopfzeile">
+          <button type="button" id="btnAnlegen">Klausur anlegen</button>
+          <button type="button" class="leise" id="btnAbbrechen">Abbrechen</button>
+        </div>
+        <div class="meldung" id="meldungAnlegen" hidden></div>
+      </div>
+    </div>
+
+    <!-- ------------------------ Eine Klausur ------------------------ -->
+    <div id="kastenKlausur" hidden>
+      <h2 id="klausurTitel">Klausur</h2>
+
+      <div class="box">
+        <h3 style="margin-top:0">Teilnehmercodes</h3>
+        <label for="anzahl">Wie viele?</label>
+        <input type="number" id="anzahl" class="schmal" min="1" max="40" value="20">
+        <div class="knopfzeile">
+          <button type="button" id="btnCodes">Codes erzeugen</button>
+          <button type="button" class="leise" id="btnCodesTabelle">Vorhandene
+            als Tabelle</button>
+        </div>
+        <p class="fussnote">Die PINs erscheinen <strong>einmal</strong> und
+          werden sofort zum Download angeboten. Danach stehen sie nur noch
+          als Hash in der Datenbank &ndash; auch du kannst sie nicht mehr
+          nachsehen.</p>
+        <div class="meldung" id="meldungCodes" hidden></div>
+        <div class="rahmen"><table id="codeTabelle"></table></div>
+      </div>
+
+      <div class="box">
+        <h3 style="margin-top:0">Durchführen</h3>
+        <p class="fussnote">Die Klasse öffnet
+          <code id="teilnahmeLink">…/klausur/teilnahme.html</code> und tippt
+          Code und PIN ein.</p>
+        <div class="knopfzeile">
+          <button type="button" id="btnOeffnen">Freigeben</button>
+          <button type="button" class="leise" id="btnBeenden">Beenden</button>
+        </div>
+        <div class="meldung" id="meldungStatus" hidden></div>
+      </div>
+
+      <div class="box">
+        <h3 style="margin-top:0">Auswerten</h3>
+        <p class="fussnote">Entschlüsselt und bewertet wird hier, in diesem
+          Browser. Der Server hat weder den Lösungsschlüssel noch die
+          Antworten je gesehen.</p>
+        <div class="knopfzeile">
+          <button type="button" id="btnErgebnisse">Ergebnisse herunterladen</button>
+          <button type="button" class="leise" id="btnZurueckListe">Zurück</button>
+        </div>
+        <div class="meldung" id="meldungErgebnisse" hidden></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  &copy; 2026 t-bk.de &middot; <a href="/impressum.html">Impressum</a> &middot;
+  <a href="/datenschutz.html">Datenschutz</a>
+</footer>
+
+<script src="assets/krypto.js"></script>
+<script src="assets/xlsx.js"></script>
+<script src="assets/bewertung.js"></script>
+<script src="assets/lehrkraft.js"></script>
+</body>
+</html>

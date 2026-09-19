@@ -1,0 +1,5 @@
+# Der Klausurbereich gehoert nicht in den Index. Er ist nirgends verlinkt und
+# ohne handvergebenen Einladungscode auch nicht benutzbar - aber ein
+# Suchtreffer waere trotzdem der falsche Weg, ihn zu finden.
+User-agent: *
+Disallow: /klausur/

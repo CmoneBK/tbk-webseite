@@ -1,0 +1,110 @@
+/* Eigene Stile, absichtlich nicht die des Materials.
+ *
+ * Zwei Gründe: Der Bereich soll sich anfühlen wie ein Verwaltungsraum und
+ * nicht wie eine Übung - wer hier ist, arbeitet nicht am Stoff. Und er muss
+ * ohne das Material-Repo funktionieren, damit man ihn einzeln öffnen und
+ * prüfen kann. */
+
+:root {
+  color-scheme: light;
+  --bg: #f7f7f5;
+  --card: #ffffff;
+  --fg: #23231f;
+  --muted: #5f5f5a;
+  --border: #e3e3df;
+  --border-stark: #cbd5e1;
+  --accent: #2b6cb0;
+  --ok: #16a34a;
+  --warn: #b45309;
+  --bad: #dc2626;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+
+header.wrap { padding-top: 32px; padding-bottom: 8px; }
+header .herkunft {
+  margin: 0 0 4px; font-size: 12.5px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted);
+}
+h1 { font-size: 27px; margin: 0 0 8px; line-height: 1.25; }
+.lead { font-size: 17px; color: var(--muted); margin: 0 0 8px; }
+
+h2 {
+  font-size: 20px; margin: 40px 0 6px; padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+h3 { font-size: 16px; margin: 24px 0 6px; }
+
+.box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px; margin: 14px 0;
+}
+.box.warnung { border-left: 4px solid var(--warn); }
+.box.ernst { border-left: 4px solid var(--bad); }
+.box.gut { border-left: 4px solid var(--ok); }
+
+label { display: block; font-size: 14px; font-weight: 600; margin: 12px 0 4px; }
+input[type=text], input[type=password], input[type=number], select, textarea {
+  font: inherit; font-size: 15px; width: 100%; padding: 9px 11px;
+  border: 1px solid var(--border-stark); border-radius: 9px;
+  background: var(--bg); color: inherit;
+}
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+.schmal { max-width: 280px; }
+.code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  letter-spacing: .08em; }
+
+button {
+  font: 600 15px/1.4 inherit; cursor: pointer; padding: 10px 16px;
+  border-radius: 9px; border: 1px solid var(--accent);
+  background: var(--accent); color: #fff;
+}
+button.leise { background: none; color: var(--fg); border-color: var(--border-stark); }
+button.leise:hover { border-color: var(--accent); color: var(--accent); }
+button:disabled { opacity: .5; cursor: default; }
+.knopfzeile { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--border); }
+th { font-size: 12.5px; color: var(--muted); }
+td.zahl, th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
+.rahmen { overflow-x: auto; }
+
+.meldung { margin: 12px 0 0; padding: 10px 13px; border-radius: 9px;
+  border-left: 4px solid var(--border-stark); background: var(--bg); font-size: 14.5px; }
+.meldung.ja { border-left-color: var(--ok); }
+.meldung.nein { border-left-color: var(--bad); }
+.meldung.arbeit { border-left-color: var(--accent); }
+
+.fussnote { font-size: 12.5px; color: var(--muted); }
+
+/* Die Fragen in der Teilnahme. */
+.frage { background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 16px; margin: 14px 0; }
+.frage > .kopf { font-size: 12.5px; color: var(--muted); margin-bottom: 4px; }
+.frage > .text { font-weight: 600; margin: 0 0 10px; }
+.frage .option { display: flex; gap: 10px; align-items: flex-start;
+  padding: 7px 9px; border-radius: 8px; cursor: pointer; }
+.frage .option:hover { background: var(--bg); }
+.frage .option input { width: auto; margin-top: 3px; }
+.frage .option.voll { opacity: .55; }
+.frage .zaehler { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.frage .zaehler.voll { color: var(--warn); font-weight: 600; }
+
+footer.wrap { margin: 48px 0 32px; font-size: 13px; color: var(--muted); }
+
+@media (max-width: 560px) {
+  .wrap { padding: 0 14px; }
+  h1 { font-size: 23px; }
+}

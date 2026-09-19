@@ -1,0 +1,76 @@
+[
+  {
+    "thema": "Fügeverfahren: Prinzipien",
+    "text": "Welche Verbindungen sind formschlüssig?",
+    "optionen": [
+      "Passfederverbindung",
+      "Klebeverbindung",
+      "Stiftverbindung",
+      "Schrumpfverbindung",
+      "Nietverbindung mit Lochleibung"
+    ],
+    "anzahl": 3,
+    "richtig": [0, 2, 4]
+  },
+  {
+    "thema": "Fügeverfahren: Prinzipien",
+    "text": "Welche Aussage über den Stoffschluss trifft zu?",
+    "optionen": [
+      "Er lässt sich zerstörungsfrei lösen.",
+      "Die Verbindung entsteht durch atomare oder molekulare Kräfte.",
+      "Er überträgt die Kraft über Reibung.",
+      "Er setzt eine Vorspannkraft voraus."
+    ],
+    "anzahl": 1,
+    "richtig": [1]
+  },
+  {
+    "thema": "Wälzlager: Umlaufverhältnis",
+    "text": "Eine Getriebewelle dreht, die Zahnkraft behält ihre Richtung. Was gilt?",
+    "optionen": [
+      "Der Innenring hat Umfangslast.",
+      "Der Außenring hat Umfangslast.",
+      "Der Innenring braucht Übermaß auf der Welle.",
+      "Der Außenring braucht Übermaß im Gehäuse."
+    ],
+    "anzahl": 2,
+    "richtig": [0, 2]
+  },
+  {
+    "thema": "Wälzlager: Schadensbilder",
+    "text": "Gleichmäßig verteilte Eindrücke im Abstand der Wälzkörper – woher kommen sie?",
+    "optionen": [
+      "Die Montagekraft lief über die Wälzkörper.",
+      "Der Schmierfilm ist abgerissen.",
+      "Stromdurchgang durch das Lager.",
+      "Der Ring mit Umfangslast saß zu lose."
+    ],
+    "anzahl": 1,
+    "richtig": [0]
+  },
+  {
+    "thema": "Drehprozess: Werkzeug",
+    "text": "Welche Angaben stehen in der Bezeichnung einer Wendeschneidplatte nach DIN ISO 1832?",
+    "optionen": [
+      "Grundform",
+      "Schnittgeschwindigkeit",
+      "Freiwinkel",
+      "Eckenradius",
+      "Standzeit"
+    ],
+    "anzahl": 3,
+    "richtig": [0, 2, 3]
+  },
+  {
+    "thema": "Schweißen: Sinnbilder",
+    "text": "Die Naht ist mit einer Strichlinie unter der Bezugslinie eingetragen. Was heißt das?",
+    "optionen": [
+      "Die Naht liegt auf der Pfeilseite.",
+      "Die Naht liegt auf der Gegenseite.",
+      "Die Naht läuft ringsum.",
+      "Die Naht wird auf der Baustelle geschweißt."
+    ],
+    "anzahl": 1,
+    "richtig": [1]
+  }
+]
