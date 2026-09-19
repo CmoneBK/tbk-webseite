@@ -89,7 +89,6 @@ td.zahl, th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
 
 .fussnote { font-size: 12.5px; color: var(--muted); }
 
-/* Die Fragen in der Teilnahme. */
 /* ---------- Fragenpool: Filter und Auswahl ---------- */
 .filter { border: 1px solid var(--border); border-radius: 10px;
   padding: 12px 14px; margin: 0 0 14px; background: var(--bg); }
@@ -114,8 +113,8 @@ td.zahl, th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
 .poolFrage.drin { border-left-color: var(--ok, #127c2f);
   background: var(--card); }
 .poolOptionen { margin: 2px 0 0 26px; }
-.istRichtig { color: #127c2f; font-weight: 600; }
 
+/* Die Fragen in der Teilnahme. */
 .frage { background: var(--card); border: 1px solid var(--border);
   border-radius: 12px; padding: 14px 16px; margin: 14px 0; }
 .frage > .kopf { font-size: 12.5px; color: var(--muted); margin-bottom: 4px; }

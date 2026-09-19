@@ -554,8 +554,12 @@
       os.appendChild(document.createTextNode(optText));
       if (zeigL && istRichtig(f, o)) {
         var badge = document.createElement('span');
-        badge.className = 'istRichtig';
         badge.textContent = '  ✓ richtig';
+        /* Bewusst am Knoten und nicht als Klasse: Diese Markierung ist
+           nur dann etwas wert, wenn sie grün ist - und sie soll das auch
+           dann sein, wenn ein Browser ein Stilblatt von gestern hält. */
+        badge.style.color = '#127c2f';
+        badge.style.fontWeight = '600';
         os.appendChild(badge);
       }
       zeile.appendChild(ko);
