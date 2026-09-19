@@ -324,6 +324,19 @@
     return [OHNE, OHNE, kopf, t.join(':').trim()];
   }
 
+  /* Der Anforderungsbereich einer Frage: I, II oder III. Ein aelterer
+     Poolstand kennt das Feld nicht - dann gilt 0 und die Frage zaehlt
+     unter "ohne Einstufung". Lieber eine ehrliche Luecke als eine
+     erfundene Zahl. */
+  var AFB_NAME = { 1: 'I', 2: 'II', 3: 'III', 0: '–' };
+  var AFB_LANG = {
+    1: 'Wiedergeben', 2: 'Anwenden', 3: 'Beurteilen', 0: 'ohne Einstufung'
+  };
+
+  function afbVon(f) {
+    return (f.afb === 1 || f.afb === 2 || f.afb === 3) ? f.afb : 0;
+  }
+
   function neueOption(wert, text) {
     var o = document.createElement('option');
     o.value = wert;
@@ -347,6 +360,7 @@
     var bild = el('fBild').value;
     var punkte = el('fPunkte').value;
     var reserve = el('fReserve').value;
+    var stufe = el('fAfb').value;
     var stufen = EBENEN.map(function (id) { return el(id).value; });
     var raus = [];
     pool.forEach(function (f, i) {
@@ -356,6 +370,7 @@
       }
       if (bild === 'mit' && !f.bild) { return; }
       if (bild === 'ohne' && f.bild) { return; }
+      if (stufe && String(afbVon(f)) !== stufe) { return; }
       /* Ein Punkt je richtiger Antwort - so rechnet bewertung.js. */
       var n = (f.richtig || []).length;
       if (punkte === '4' && n < 4) { return; }
@@ -411,6 +426,7 @@
   el('fBild').addEventListener('change', poolZeichnen);
   el('fPunkte').addEventListener('change', poolZeichnen);
   el('fReserve').addEventListener('change', poolZeichnen);
+  el('fAfb').addEventListener('change', poolZeichnen);
   el('fSuche').addEventListener('input', function () {
     /* Bei jedem Tastendruck 404 Blöcke neu zu bauen wäre zäh. */
     clearTimeout(suchUhr);
@@ -423,6 +439,7 @@
     el('fBild').value = '';
     el('fPunkte').value = '';
     el('fReserve').value = '';
+    el('fAfb').value = '';
     filterNeu();
   });
 
@@ -516,6 +533,13 @@
       poolStand();
     });
     var sp = document.createElement('span');
+    var st = afbVon(f);
+    var marke = document.createElement('span');
+    marke.className = 'afbMarke afb' + st;
+    marke.textContent = AFB_NAME[st];
+    marke.title = 'Anforderungsbereich ' + AFB_NAME[st]
+      + ' – ' + AFB_LANG[st];
+    sp.appendChild(marke);
     var stark = document.createElement('strong');
     stark.textContent = f.text;
     sp.appendChild(stark);
@@ -611,10 +635,83 @@
           + '(sie bleiben in der Klausur).' : '')
       : '';
 
+    afbZeichnen(g);
+
     var tn = el('teilmengeN');
     tn.max = String(g.length);
     if (Number(tn.value) > g.length) { tn.value = String(g.length || 1); }
     if (!tn.value || Number(tn.value) < 1) { tn.value = String(Math.min(g.length, Math.max(1, g.length))); }
+  }
+
+  /* ---------- Anforderungsbereiche der Auswahl ----------
+
+     Gezählt wird in Punkten, nicht in Aufgaben: Eine Klausur wird
+     über Punkte gewichtet, und eine Aufgabe mit vier richtigen
+     Antworten wiegt viermal so schwer wie eine mit einer. Die Zahl
+     der Aufgaben steht daneben, weil man sie beim Zusammenstellen
+     trotzdem im Kopf hat. */
+
+  function afbZeichnen(gewaehlteAufgaben) {
+    var kasten = el('afbKasten');
+    if (!gewaehlteAufgaben.length) { kasten.hidden = true; return; }
+    kasten.hidden = false;
+
+    var zahl = { 0: 0, 1: 0, 2: 0, 3: 0 };
+    var punkte = { 0: 0, 1: 0, 2: 0, 3: 0 };
+    gewaehlteAufgaben.forEach(function (e) {
+      var st = afbVon(e.f);
+      /* Ein Punkt je richtiger Antwort, die auch in der Klausur
+         steht - dieselbe Rechnung wie im Stand darüber. */
+      var rich = e.sel.filter(function (o) { return istRichtig(e.f, o); });
+      zahl[st] += 1;
+      punkte[st] += rich.length;
+    });
+    var summe = punkte[0] + punkte[1] + punkte[2] + punkte[3];
+
+    var balken = el('afbBalken');
+    balken.textContent = '';
+    var zeilen = el('afbZeilen');
+    zeilen.textContent = '';
+
+    [1, 2, 3, 0].forEach(function (st) {
+      if (!zahl[st]) { return; }
+      var anteil = summe ? (100 * punkte[st] / summe) : 0;
+
+      var stueck = document.createElement('div');
+      stueck.className = 'afbStueck afb' + st;
+      stueck.style.width = anteil.toFixed(1) + '%';
+      stueck.title = AFB_NAME[st] + ': ' + Math.round(anteil) + ' %';
+      if (anteil >= 9) { stueck.textContent = AFB_NAME[st]; }
+      balken.appendChild(stueck);
+
+      var tr = document.createElement('tr');
+      [[AFB_NAME[st], 'afbZelleMarke afb' + st],
+       [AFB_LANG[st], ''],
+       [zahl[st] + (zahl[st] === 1 ? ' Aufgabe' : ' Aufgaben'), 'zahl'],
+       [punkte[st] + (punkte[st] === 1 ? ' Punkt' : ' Punkte'), 'zahl'],
+       [Math.round(anteil) + ' %', 'zahl stark']].forEach(function (z) {
+        var td = document.createElement('td');
+        td.textContent = z[0];
+        if (z[1]) { td.className = z[1]; }
+        tr.appendChild(td);
+      });
+      zeilen.appendChild(tr);
+    });
+
+    /* Ein Hinweis, kein Urteil: Wie die Mischung aussehen soll,
+       entscheidet die Lehrkraft und nicht diese Seite. Die Spanne
+       ist die übliche Orientierung für eine Leistungsüberprüfung. */
+    var hinweis = [];
+    if (!zahl[3]) {
+      hinweis.push('Kein Anforderungsbereich III dabei.');
+    }
+    if (zahl[0]) {
+      hinweis.push(zahl[0] + ' Aufgabe(n) ohne Einstufung – der '
+        + 'Fragenpool ist älter als dieses Feld.');
+    }
+    hinweis.push('Übliche Orientierung: etwa 30 % I, 50 % II, 20 % III '
+      + '– gerechnet in Punkten.');
+    el('afbHinweis').textContent = hinweis.join('  ');
   }
 
   el('btnAnlegen').addEventListener('click', async function () {

@@ -1,6 +1,7 @@
 [
   {
     "thema": "Fügeverfahren: Prinzipien",
+    "afb": 1,
     "pfad": ["Fertigungstechnik", "Fügeverfahren",
              "Die Verfahren im Überblick", "Prinzipien"],
     "text": "Welche Verbindungen sind formschlüssig?",
@@ -20,6 +21,7 @@
   },
   {
     "thema": "Fügeverfahren: Prinzipien",
+    "afb": 1,
     "pfad": ["Fertigungstechnik", "Fügeverfahren",
              "Die Verfahren im Überblick", "Prinzipien"],
     "text": "Welche Aussage über den Stoffschluss trifft zu?",
@@ -37,6 +39,7 @@
   },
   {
     "thema": "Wälzlager: Umlaufverhältnis",
+    "afb": 2,
     "pfad": ["Maschinenelemente", "Lager",
              "Wälzlager und Lagerungen", "Umlaufverhältnis"],
     "text": "Eine Getriebewelle dreht, die Zahnkraft behält ihre Richtung. Was gilt?",
@@ -53,6 +56,7 @@
   },
   {
     "thema": "Wälzlager: Schadensbilder",
+    "afb": 2,
     "pfad": ["Maschinenelemente", "Lager",
              "Wälzlager und Lagerungen", "Schadensbilder"],
     "text": "Gleichmäßig verteilte Eindrücke im Abstand der Wälzkörper – woher kommen sie?",
@@ -68,6 +72,7 @@
   },
   {
     "thema": "Drehprozess: Werkzeug",
+    "afb": 2,
     "pfad": ["Fertigungstechnik", "Zerspanung",
              "Planung eines Drehprozesses", "Werkzeug"],
     "text": "Welche Angaben stehen in der Bezeichnung einer Wendeschneidplatte nach DIN ISO 1832?",
@@ -86,6 +91,7 @@
   },
   {
     "thema": "Schweißen: Sinnbilder",
+    "afb": 1,
     "pfad": ["Fertigungstechnik", "Fügeverfahren",
              "Schweißen", "Sinnbilder"],
     "text": "Die Naht ist mit einer Strichlinie unter der Bezugslinie eingetragen. Was heißt das?",

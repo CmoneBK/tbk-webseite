@@ -179,6 +179,15 @@
               </select>
             </div>
             <div>
+              <label for="fAfb">Anforderungsbereich</label>
+              <select id="fAfb">
+                <option value="">egal</option>
+                <option value="1">I &ndash; Wiedergeben</option>
+                <option value="2">II &ndash; Anwenden</option>
+                <option value="3">III &ndash; Beurteilen</option>
+              </select>
+            </div>
+            <div>
               <label for="fReserve">Antworten in Reserve</label>
               <select id="fReserve">
                 <option value="">egal</option>
@@ -203,6 +212,12 @@
         <div class="meldung" id="meldungPool" hidden></div>
         <div id="pool"></div>
         <p class="fussnote" id="poolStand"></p>
+        <div class="afbKasten" id="afbKasten" hidden>
+          <h4>Anforderungsbereiche der Auswahl</h4>
+          <div class="afbBalken" id="afbBalken"></div>
+          <table class="afbTabelle"><tbody id="afbZeilen"></tbody></table>
+          <p class="fussnote" id="afbHinweis"></p>
+        </div>
       </div>
 
       <div class="box">

@@ -35,6 +35,9 @@ Nicht hier, mit Absicht:
   plus falsche bis fünf).
   Ein optionales Feld `bild` nimmt SVG-Quelltext auf; `pfad` ordnet die
   Frage in vier Ebenen ein und speist den Filter (siehe unten).
+  `afb` nennt den Anforderungsbereich (1 Wiedergeben, 2 Anwenden,
+  3 Beurteilen) — eine didaktische Einschätzung, die im Pool steht und
+  dort auch geändert wird.
 
 ## Was die Lehrkraft beim Zusammenstellen einstellt
 
@@ -45,6 +48,11 @@ Nicht hier, mit Absicht:
   Die **Auswahl hängt nicht am Filter**: Wer zu einem Thema auswählt und
   dann das Thema wechselt, behält das Gewählte. Eine Zeile unter dem Filter
   sagt, wie viele gewählte Aufgaben gerade außerhalb des Filters liegen.
+* **Anforderungsbereiche live** — unter dem Pool steht, wie sich die
+  Auswahl auf I, II und III verteilt, als Balken und als Tabelle. Gerechnet
+  wird in **Punkten**, nicht in Aufgaben. Zur Orientierung nennt die Zeile
+  darunter die übliche Mischung (etwa 30 / 50 / 20) — als Hinweis, nicht
+  als Vorschrift.
 * **Antworten je Frage** — welche richtigen und falschen Optionen aus dem Pool
   tatsächlich in der Klausur stehen. `anzahl` und Lösungsschlüssel werden aus
   der Auswahl neu berechnet.

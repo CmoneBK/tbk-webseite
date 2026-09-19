@@ -114,6 +114,41 @@ td.zahl, th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
   background: var(--card); }
 .poolOptionen { margin: 2px 0 0 26px; }
 
+/* ---------- Anforderungsbereiche ----------
+   Drei Stufen, drei Farben - und zwar solche, die sich auch ohne
+   Farbe unterscheiden: Die Marke traegt ihre Ziffer im Text. Wer
+   Rot und Gruen nicht trennen kann, liest I, II, III. */
+.afbMarke { display: inline-block; min-width: 22px; margin-right: 7px;
+  padding: 1px 5px; border-radius: 6px; font-size: 11px;
+  font-weight: 700; text-align: center; letter-spacing: .03em;
+  border: 1px solid; vertical-align: 1px; }
+.afb1 { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
+.afb2 { color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff; }
+.afb3 { color: #b45309; border-color: #fde68a; background: #fffbeb; }
+.afb0 { color: var(--muted); border-color: var(--border);
+  background: var(--bg); }
+
+.afbKasten { margin: 14px 0 0; padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg); }
+.afbKasten h4 { margin: 0 0 8px; font-size: 13px; }
+
+.afbBalken { display: flex; height: 22px; border-radius: 6px;
+  overflow: hidden; border: 1px solid var(--border-stark); }
+.afbStueck { display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; min-width: 0; overflow: hidden; }
+.afbStueck.afb1 { background: #bfdbfe; color: #1e3a8a; }
+.afbStueck.afb2 { background: #ddd6fe; color: #4c1d95; }
+.afbStueck.afb3 { background: #fde68a; color: #78350f; }
+.afbStueck.afb0 { background: var(--border); color: var(--muted); }
+
+.afbTabelle { margin: 8px 0 0; }
+.afbTabelle td { padding: 4px 8px; border-bottom: none; font-size: 13px; }
+.afbTabelle td.zahl { text-align: right; white-space: nowrap;
+  color: var(--muted); }
+.afbTabelle td.zahl.stark { color: var(--fg); font-weight: 700; }
+.afbZelleMarke { width: 34px; font-weight: 700; text-align: center;
+  border-radius: 6px; }
+
 /* Die Fragen in der Teilnahme. */
 .frage { background: var(--card); border: 1px solid var(--border);
   border-radius: 12px; padding: 14px 16px; margin: 14px 0; }

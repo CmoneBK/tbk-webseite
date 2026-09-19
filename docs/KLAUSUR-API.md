@@ -160,12 +160,27 @@ Frage (siehe `docs/klausur-fragenpool.beispiel.json`):
 ```json
 { "thema": "…", "text": "…",
   "pfad": ["Bereich", "Unterkategorie", "Einheit", "Thema"],
+  "afb": 2,                    // 1, 2 oder 3
   "optionen": ["…", "…", …],   // gern MEHR als fünf
   "richtig":  [0, 2, 4],       // Indizes in "optionen"
   "standard": [0, 1, 2, 3, 4], // optional: was vorausgewählt erscheint
   "bild": "<svg …>…</svg>"     // optional: ein Bild zur Frage
 }
 ```
+
+`afb` ist der **Anforderungsbereich**: 1 Wiedergeben, 2 Anwenden,
+3 Beurteilen. Die Oberfläche zeigt damit beim Zusammenstellen laufend an,
+wie sich die Auswahl auf die drei Bereiche verteilt — gerechnet in
+**Punkten**, nicht in Aufgaben, denn eine Aufgabe mit vier richtigen
+Antworten wiegt viermal so schwer wie eine mit einer. Fehlt das Feld, führt
+die Oberfläche die Frage unter „ohne Einstufung" auf und erfindet keine
+Zahl.
+
+Die Einstufung ist eine **didaktische Einschätzung, keine Eigenschaft der
+Frage**. Wer sie anders sieht, ändert sie im Pool. Eine Klausur nach der
+üblichen Orientierung (etwa 30 % I, 50 % II, 20 % III) lässt sich nur
+bauen, wenn der Pool genug Aufgaben des Bereichs III enthält — im
+Multiple-Choice-Format ist das die knappste Ware.
 
 `pfad` ordnet die Frage im Material ein und ist die Grundlage des Filters,
 mit dem die Lehrkraft ihre Klausur zusammenstellt. Die drei oberen Ebenen
