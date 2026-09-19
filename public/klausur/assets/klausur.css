@@ -121,7 +121,7 @@ td.zahl, th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
 .frage > .text { font-weight: 600; margin: 0 0 10px; }
 /* Ein Bild zur Aufgabe. Weisser Grund, weil die Zeichnungen mit
    dunkler Linie auf hellem Grund gedacht sind - auch im dunklen Thema. */
-.aufgabenbild { display: block; width: 100%; max-width: 380px; height: auto;
+.aufgabenbild { display: block; width: 100%; max-width: 460px; height: auto;
   margin: 0 0 12px; background: #fff; border: 1px solid var(--border);
   border-radius: 8px; padding: 6px; box-sizing: border-box; }
 
