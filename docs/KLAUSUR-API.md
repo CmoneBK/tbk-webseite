@@ -161,6 +161,7 @@ Frage (siehe `docs/klausur-fragenpool.beispiel.json`):
 { "thema": "…", "text": "…",
   "pfad": ["Bereich", "Unterkategorie", "Einheit", "Thema"],
   "afb": 2,                    // 1, 2 oder 3
+  "bild_hilfe": true,          // optional: Bild nur auf Wunsch mitgeben
   "optionen": ["…", "…", …],   // gern MEHR als fünf
   "richtig":  [0, 2, 4],       // Indizes in "optionen"
   "standard": [0, 1, 2, 3, 4], // optional: was vorausgewählt erscheint
@@ -177,7 +178,17 @@ die Oberfläche die Frage unter „ohne Einstufung" auf und erfindet keine
 Zahl.
 
 Die Einstufung ist eine **didaktische Einschätzung, keine Eigenschaft der
-Frage**. Wer sie anders sieht, ändert sie im Pool. Eine Klausur nach der
+Frage**. Wer sie anders sieht, ändert sie im Pool — oder, für einen einzelnen
+Durchgang, direkt an der Frage in der Oberfläche. Filter und Auswertung
+rechnen dann mit der geänderten Stufe, denn sonst zeigte die Statistik etwas
+anderes an als der Bildschirm.
+
+`bild_hilfe` unterscheidet zwei Arten von Bild. Ein Bild **ohne** dieses Feld
+gehört zur Frage — ohne es ist sie nicht zu beantworten, und es geht
+selbstverständlich mit in die Klausur. Ein Bild **mit** `bild_hilfe` erklärt
+nur die Angaben, etwa welche Strecke in einer Rechnung mit `l` gemeint ist;
+es löst nichts. Es ist deshalb **nicht** vorausgewählt: Ob eine Gruppe es
+bekommt, entscheidet die Lehrkraft je Aufgabe. Eine Klausur nach der
 üblichen Orientierung (etwa 30 % I, 50 % II, 20 % III) lässt sich nur
 bauen, wenn der Pool genug Aufgaben des Bereichs III enthält — im
 Multiple-Choice-Format ist das die knappste Ware.

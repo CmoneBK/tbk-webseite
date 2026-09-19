@@ -118,10 +118,23 @@ td.zahl, th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
    Drei Stufen, drei Farben - und zwar solche, die sich auch ohne
    Farbe unterscheiden: Die Marke traegt ihre Ziffer im Text. Wer
    Rot und Gruen nicht trennen kann, liest I, II, III. */
-.afbMarke { display: inline-block; min-width: 22px; margin-right: 7px;
-  padding: 1px 5px; border-radius: 6px; font-size: 11px;
-  font-weight: 700; text-align: center; letter-spacing: .03em;
-  border: 1px solid; vertical-align: 1px; }
+/* Die Marke ist ein Auswahlfeld: Sie zeigt die Stufe und laesst sie
+   aendern. Sie soll trotzdem wie eine Marke aussehen und nicht wie ein
+   Formularfeld - deshalb die eigene Groesse und kein Rahmen des
+   Betriebssystems. */
+.afbMarke { display: inline-block; width: auto; min-width: 46px;
+  margin: 0 7px 0 0; padding: 1px 4px; border-radius: 6px;
+  font-size: 11px; font-weight: 700; text-align: center;
+  letter-spacing: .03em; border: 1px solid; vertical-align: 1px;
+  line-height: 1.5; -webkit-appearance: none; appearance: none; }
+.afbMarke:focus-visible { outline: 2px solid var(--accent);
+  outline-offset: 1px; }
+
+/* Der Schalter am Bild steht eingerueckt unter ihm und traegt seine
+   eigene, kleinere Schrift - er gehoert zum Bild, nicht zur Antwort. */
+.bildSchalter { margin: -4px 0 8px; font-size: 12.5px;
+  color: var(--muted); }
+.bildSchalter span { font-weight: 400; }
 .afb1 { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
 .afb2 { color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff; }
 .afb3 { color: #b45309; border-color: #fde68a; background: #fffbeb; }

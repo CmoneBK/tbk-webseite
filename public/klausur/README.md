@@ -37,7 +37,9 @@ Nicht hier, mit Absicht:
   Frage in vier Ebenen ein und speist den Filter (siehe unten).
   `afb` nennt den Anforderungsbereich (1 Wiedergeben, 2 Anwenden,
   3 Beurteilen) — eine didaktische Einschätzung, die im Pool steht und
-  dort auch geändert wird.
+  dort auch geändert wird. `bild_hilfe` kennzeichnet ein Bild, das die
+  Frage nur erklärt und sie nicht löst; ein solches Bild geht nur auf
+  Wunsch mit.
 
 ## Was die Lehrkraft beim Zusammenstellen einstellt
 
@@ -53,6 +55,13 @@ Nicht hier, mit Absicht:
   wird in **Punkten**, nicht in Aufgaben. Zur Orientierung nennt die Zeile
   darunter die übliche Mischung (etwa 30 / 50 / 20) — als Hinweis, nicht
   als Vorschrift.
+* **Stufe je Aufgabe ändern** — die Marke vor dem Fragetext ist ein
+  Auswahlfeld. Wer eine Einstufung anders sieht, ändert sie für diesen
+  Durchgang; Filter und Auswertung rechnen sofort damit. Der Pool bleibt,
+  wie er ist.
+* **Hilfsbild zuschalten** — Bilder, die zur Frage gehören, sind
+  vorausgewählt. Ein Hilfsbild, das nur die Angaben erklärt, ist es nicht:
+  Ein Häkchen unter dem Bild entscheidet, ob die Gruppe es bekommt.
 * **Antworten je Frage** — welche richtigen und falschen Optionen aus dem Pool
   tatsächlich in der Klausur stehen. `anzahl` und Lösungsschlüssel werden aus
   der Auswahl neu berechnet.

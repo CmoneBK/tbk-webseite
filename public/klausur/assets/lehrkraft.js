@@ -308,6 +308,8 @@
 
   var gewaehlt = {};        // Poolindex -> in der Klausur?
   var optWahl = {};         // Poolindex -> gewählte Antwortindizes
+  var bildAn = {};          // Poolindex -> Bild mitgeben?
+  var afbWahl = {};         // Poolindex -> abweichender Anforderungsbereich
   var bildCache = {};       // Poolindex -> data-URL
   var suchUhr = null;
 
@@ -333,8 +335,21 @@
     1: 'Wiedergeben', 2: 'Anwenden', 3: 'Beurteilen', 0: 'ohne Einstufung'
   };
 
-  function afbVon(f) {
+  /* Die Einstufung im Pool ist eine Einschätzung, keine Eigenschaft
+     der Frage. Wer sie anders sieht, ändert sie hier - für diesen
+     Durchgang, nicht im Pool. Filter und Auswertung rechnen dann mit
+     der geänderten Stufe, denn sonst zeigte die Statistik etwas
+     anderes an, als die Lehrkraft vor sich sieht. */
+  function afbVon(f, i) {
+    if (i !== undefined && afbWahl[i]) { return afbWahl[i]; }
     return (f.afb === 1 || f.afb === 2 || f.afb === 3) ? f.afb : 0;
+  }
+
+  /* Soll das Bild mit in die Klausur? Ein Bild, das zur Frage gehört,
+     ja - eines, das nur beim Verstehen hilft, nur auf Wunsch. */
+  function bildMit(f, i) {
+    if (bildAn[i] !== undefined) { return bildAn[i]; }
+    return !!f.bild && !f.bild_hilfe;
   }
 
   function neueOption(wert, text) {
@@ -370,7 +385,7 @@
       }
       if (bild === 'mit' && !f.bild) { return; }
       if (bild === 'ohne' && f.bild) { return; }
-      if (stufe && String(afbVon(f)) !== stufe) { return; }
+      if (stufe && String(afbVon(f, i)) !== stufe) { return; }
       /* Ein Punkt je richtiger Antwort - so rechnet bewertung.js. */
       var n = (f.richtig || []).length;
       if (punkte === '4' && n < 4) { return; }
@@ -533,12 +548,26 @@
       poolStand();
     });
     var sp = document.createElement('span');
-    var st = afbVon(f);
-    var marke = document.createElement('span');
-    marke.className = 'afbMarke afb' + st;
-    marke.textContent = AFB_NAME[st];
-    marke.title = 'Anforderungsbereich ' + AFB_NAME[st]
-      + ' – ' + AFB_LANG[st];
+    /* Die Stufe steht nicht nur da, sie lässt sich ändern. Das Feld
+       sitzt vor dem Fragetext, weil man beim Lesen der Frage darüber
+       urteilt - und nicht erst hinterher. */
+    var marke = document.createElement('select');
+    marke.className = 'afbMarke afb' + afbVon(f, i);
+    marke.title = 'Anforderungsbereich – für diesen Durchgang änderbar';
+    [1, 2, 3].forEach(function (st) {
+      marke.appendChild(neueOption(String(st), AFB_NAME[st]));
+    });
+    if (!afbVon(f, i)) {
+      marke.insertBefore(neueOption('0', AFB_NAME[0]), marke.firstChild);
+    }
+    marke.value = String(afbVon(f, i));
+    marke.addEventListener('change', function () {
+      var st = Number(this.value);
+      if (st === (f.afb || 0)) { delete afbWahl[i]; } else { afbWahl[i] = st; }
+      this.className = 'afbMarke afb' + afbVon(f, i);
+      poolStand();
+    });
+    marke.addEventListener('click', function (e) { e.preventDefault(); });
     sp.appendChild(marke);
     var stark = document.createElement('strong');
     stark.textContent = f.text;
@@ -548,7 +577,30 @@
     block.appendChild(kopf);
     if (gewaehlt[i]) { block.classList.add('drin'); }
 
-    if (f.bild) { block.appendChild(bildKnoten(i, f.bild)); }
+    if (f.bild) {
+      block.appendChild(bildKnoten(i, f.bild));
+      /* Ein Hilfsbild löst die Aufgabe nicht, es erklärt nur ihre
+         Buchstaben. Ob eine Gruppe es bekommt, entscheidet die
+         Lehrkraft - deshalb der Schalter und keine feste Regel. */
+      var bz = document.createElement('label');
+      bz.className = 'option bildSchalter';
+      var bk = document.createElement('input');
+      bk.type = 'checkbox';
+      bk.className = 'bInc';
+      bk.dataset.i = String(i);
+      bk.checked = bildMit(f, i);
+      bk.addEventListener('change', function () {
+        bildAn[i] = this.checked;
+        poolStand();
+      });
+      var bs = document.createElement('span');
+      bs.textContent = f.bild_hilfe
+        ? 'Hilfsbild mitgeben (erklärt die Angaben, löst nichts)'
+        : 'Bild mitgeben (gehört zur Frage)';
+      bz.appendChild(bk);
+      bz.appendChild(bs);
+      block.appendChild(bz);
+    }
 
     var vor = optWahl[i] || standardAuswahl(f);
     var optWrap = document.createElement('div');
@@ -601,7 +653,8 @@
     var out = [];
     pool.forEach(function (f, i) {
       if (!gewaehlt[i]) { return; }
-      out.push({ f: f, sel: (optWahl[i] || standardAuswahl(f)).slice() });
+      out.push({ f: f, i: i, bild: bildMit(f, i),
+        sel: (optWahl[i] || standardAuswahl(f)).slice() });
     });
     return out;
   }
@@ -659,7 +712,7 @@
     var zahl = { 0: 0, 1: 0, 2: 0, 3: 0 };
     var punkte = { 0: 0, 1: 0, 2: 0, 3: 0 };
     gewaehlteAufgaben.forEach(function (e) {
-      var st = afbVon(e.f);
+      var st = afbVon(e.f, e.i);
       /* Ein Punkt je richtiger Antwort, die auch in der Klausur
          steht - dieselbe Rechnung wie im Stand darüber. */
       var rich = e.sel.filter(function (o) { return istRichtig(e.f, o); });
@@ -767,7 +820,7 @@
       var aufgabe = { text: e.f.text, optionen: optionen, anzahl: richtigNeu.length };
       /* Das Bild hängt an der Frage, nicht an einer Option - es übersteht
          deshalb auch das Mischen der Antworten. */
-      if (e.f.bild) { aufgabe.bild = e.f.bild; }
+      if (e.f.bild && e.bild) { aufgabe.bild = e.f.bild; }
       aufgaben.push(aufgabe);
       richtigAll.push(richtigNeu);
     });
