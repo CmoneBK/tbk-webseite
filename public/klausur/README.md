@@ -30,6 +30,25 @@ Nicht hier, mit Absicht:
   nichts.
 * **Der Fragenpool** — er enthält die richtigen Antworten und hat unter
   `public/` nichts zu suchen. Vorlage: `docs/klausur-fragenpool.beispiel.json`.
+  Eine Frage darf **mehr als fünf Antworten** anbieten; ein optionales Feld
+  `standard` bestimmt, welche vorausgewählt erscheinen (sonst: alle richtigen
+  plus falsche bis fünf).
+
+## Was die Lehrkraft beim Zusammenstellen einstellt
+
+* **Antworten je Frage** — welche richtigen und falschen Optionen aus dem Pool
+  tatsächlich in der Klausur stehen. `anzahl` und Lösungsschlüssel werden aus
+  der Auswahl neu berechnet.
+* **Lösung einblenden** — ein Schalter zeigt beim Zusammenstellen, welche
+  Antworten richtig sind.
+* **Mischen / Teilmenge** — Reihenfolge der Aufgaben und/oder Antworten je
+  Teilnehmer mischen, und optional nur eine zufällige Auswahl der Aufgaben je
+  Teilnehmer ziehen. Das erschwert das Abschreiben zwischen Sitznachbarn.
+  **Kein Täuschungsschutz gegen zweiten Tab oder zweites Gerät** — das kann
+  eine Browser-Seite nicht; das leistet nur Aufsicht bzw. ein Kiosk-Modus auf
+  verwalteten Geräten (siehe `hinweise.html`). Der Teilnehmer-Browser mischt
+  lokal und legt die Zuordnung in seinen verschlüsselten Umschlag; der Server
+  sieht davon nichts, es wird nichts über das Verhalten gespeichert.
 
 ## Drei Sperren
 

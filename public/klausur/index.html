@@ -128,9 +128,37 @@
 
       <div class="box">
         <h3 style="margin-top:0">Fragen</h3>
+        <p class="fussnote" style="margin-top:0">Häkchen ganz links: Aufgabe
+          aufnehmen. Darunter wählst du, welche Antworten erscheinen &ndash;
+          richtige wie falsche. Fünf sind vorausgewählt; im Pool stehen oft
+          mehr zum Tauschen bereit.</p>
+        <label class="option"><input type="checkbox" id="loesungenZeigen">
+          Antworten und Lösung anzeigen</label>
         <div class="meldung" id="meldungPool" hidden></div>
         <div id="pool"></div>
         <p class="fussnote" id="poolStand"></p>
+      </div>
+
+      <div class="box">
+        <h3 style="margin-top:0">Mischen</h3>
+        <p class="fussnote" style="margin-top:0">Gegen das Abschreiben zwischen
+          Sitznachbarn &ndash; ohne dass irgendetwas über das Verhalten
+          gespeichert wird. Jeder Browser zieht die Auswahl lokal; gegen einen
+          zweiten Tab oder ein zweites Gerät hilft nur Aufsicht (siehe
+          <a href="hinweise.html">Hinweise</a>).</p>
+        <label class="option"><input type="checkbox" id="mischFragen">
+          Reihenfolge der Aufgaben je Teilnehmer mischen</label>
+        <label class="option"><input type="checkbox" id="mischOptionen">
+          Reihenfolge der Antworten je Aufgabe mischen</label>
+        <label class="option"><input type="checkbox" id="teilmengeAn">
+          Jeder Teilnehmer bekommt nur eine zufällige Auswahl der Aufgaben</label>
+        <div id="teilmengeZeile" hidden style="margin-top:8px">
+          <label for="teilmengeN">Wie viele Aufgaben je Teilnehmer?</label>
+          <input type="number" id="teilmengeN" class="schmal" min="1" value="1">
+          <p class="fussnote">Die erreichbare Höchstpunktzahl kann je gezogener
+            Auswahl leicht schwanken; die Ergebnistabelle weist Punkte und
+            Prozent je Teilnehmer getrennt aus.</p>
+        </div>
       </div>
 
       <div class="box">

@@ -51,7 +51,7 @@
   /* Nur im Arbeitsspeicher. */
   var ich = { code: '', auth: '', wrapKey: null, privKey: null, oeff: '' };
   var pool = [];
-  var aktuelle = null;     /* {id, titel, verfahren, fragen, loesung} */
+  var aktuelle = null;     /* {id, titel} */
 
   function angemeldet() { return !!ich.privKey; }
 
@@ -65,7 +65,7 @@
   el('npass').addEventListener('input', function () {
     var s = Krypto.staerke(this.value);
     el('staerke').textContent = this.value
-      ? 'Stärke: ' + s.urteil + ' (' + s.bits + ' Bit)' : ' ';
+      ? 'Stärke: ' + s.urteil + ' (' + s.bits + ' Bit)' : ' ';
   });
 
   el('btnAnmelden').addEventListener('click', async function () {
@@ -237,6 +237,13 @@
     el('kastenAnlegen').hidden = true;
   });
 
+  /* Lösungen ein-/ausblenden und Teilmenge-Feld zeigen. */
+  el('loesungenZeigen').addEventListener('change', poolZeichnen);
+  el('teilmengeAn').addEventListener('change', function () {
+    el('teilmengeZeile').hidden = !this.checked;
+    poolStand();
+  });
+
   async function poolLaden() {
     var m = el('meldungPool');
     sagen(m, 'arbeit', 'Fragen werden geladen …');
@@ -245,6 +252,22 @@
     pool = a.pool || [];
     m.hidden = true;
     poolZeichnen();
+  }
+
+  function istRichtig(f, o) { return (f.richtig || []).indexOf(o) !== -1; }
+
+  /* Welche Antworten sind beim Aufschlagen vorausgewählt? Wenn der Pool ein
+     Feld `standard` mitbringt, das; sonst alle richtigen plus so viele
+     falsche, bis fünf zusammenkommen. So ist die Vorauswahl immer gültig
+     (mindestens eine richtige, mindestens eine falsche) und, wenn möglich,
+     genau fünf - mehr Antworten stehen im Pool zum Dazunehmen bereit. */
+  function standardAuswahl(f) {
+    if (Array.isArray(f.standard) && f.standard.length) { return f.standard.slice(); }
+    var sel = (f.richtig || []).slice();
+    for (var o = 0; o < f.optionen.length && sel.length < 5; o++) {
+      if (sel.indexOf(o) === -1) { sel.push(o); }
+    }
+    return sel;
   }
 
   function poolZeichnen() {
@@ -256,6 +279,7 @@
         + '<code>klausur-config.php</code>, Schlüssel <code>fragenpool</code>.</p>';
       return;
     }
+    var zeigL = el('loesungenZeigen').checked;
     var themen = {};
     pool.forEach(function (f, i) {
       var t = f.thema || 'Ohne Thema';
@@ -267,73 +291,153 @@
       h.style.margin = '18px 0 6px';
       ziel.appendChild(h);
       themen[t].forEach(function (e) {
-        var zeile = document.createElement('label');
-        zeile.className = 'option';
-        var k = document.createElement('input');
-        k.type = 'checkbox';
-        k.dataset.i = String(e.i);
-        k.addEventListener('change', poolStand);
+        var block = document.createElement('div');
+        block.style.margin = '8px 0 14px';
+
+        var kopf = document.createElement('label');
+        kopf.className = 'option';
+        var kq = document.createElement('input');
+        kq.type = 'checkbox';
+        kq.className = 'fInc';
+        kq.dataset.i = String(e.i);
+        kq.addEventListener('change', poolStand);
         var sp = document.createElement('span');
-        sp.textContent = e.f.text + '  ('
-          + (e.f.anzahl === 1 ? '1 richtig' : e.f.anzahl + ' richtig') + ')';
-        zeile.appendChild(k);
-        zeile.appendChild(sp);
-        ziel.appendChild(zeile);
+        var stark = document.createElement('strong');
+        stark.textContent = e.f.text;
+        sp.appendChild(stark);
+        kopf.appendChild(kq);
+        kopf.appendChild(sp);
+        block.appendChild(kopf);
+
+        var vor = standardAuswahl(e.f);
+        var optWrap = document.createElement('div');
+        optWrap.style.margin = '2px 0 0 26px';
+        e.f.optionen.forEach(function (optText, o) {
+          var zeile = document.createElement('label');
+          zeile.className = 'option';
+          var ko = document.createElement('input');
+          ko.type = 'checkbox';
+          ko.className = 'oInc';
+          ko.dataset.i = String(e.i);
+          ko.dataset.o = String(o);
+          ko.checked = vor.indexOf(o) !== -1;
+          ko.addEventListener('change', poolStand);
+          var os = document.createElement('span');
+          var ob = document.createElement('strong');
+          ob.textContent = String.fromCharCode(97 + o) + ') ';
+          os.appendChild(ob);
+          os.appendChild(document.createTextNode(optText));
+          if (zeigL && istRichtig(e.f, o)) {
+            var badge = document.createElement('span');
+            badge.textContent = '  ✓ richtig';
+            badge.style.color = '#127c2f';
+            badge.style.fontWeight = '600';
+            os.appendChild(badge);
+          }
+          zeile.appendChild(ko);
+          zeile.appendChild(os);
+          optWrap.appendChild(zeile);
+        });
+        block.appendChild(optWrap);
+        ziel.appendChild(block);
       });
     });
     poolStand();
   }
 
-  function gewaehltePool() {
-    return [].slice.call(document.querySelectorAll('#pool input:checked'))
-      .map(function (k) { return pool[Number(k.dataset.i)]; });
+  /* Die gewählten Aufgaben mit ihren gewählten Antwortindizes (in der
+     Reihenfolge des Pools). */
+  function gewaehltAufbereiten() {
+    var out = [];
+    [].slice.call(document.querySelectorAll('#pool .fInc:checked')).forEach(function (kq) {
+      var i = Number(kq.dataset.i);
+      var sel = [].slice.call(
+        document.querySelectorAll('#pool .oInc[data-i="' + i + '"]:checked'))
+        .map(function (k) { return Number(k.dataset.o); })
+        .sort(function (a, b) { return a - b; });
+      out.push({ f: pool[i], sel: sel });
+    });
+    return out;
   }
 
   function poolStand() {
-    var g = gewaehltePool();
-    var punkte = g.reduce(function (s, f) { return s + f.anzahl; }, 0);
+    var g = gewaehltAufbereiten();
+    var punkte = 0, krumm = 0;
+    g.forEach(function (e) {
+      var rich = e.sel.filter(function (o) { return istRichtig(e.f, o); });
+      var falsch = e.sel.filter(function (o) { return !istRichtig(e.f, o); });
+      if (rich.length < 1 || falsch.length < 1) { krumm++; }
+      punkte += rich.length;
+    });
     el('poolStand').textContent = g.length
       ? g.length + ' Aufgaben, zusammen bis zu ' + punkte + ' Punkte '
-        + '(beim Verfahren „Teilpunkte").'
+        + '(bei „Teilpunkte").'
+        + (krumm ? '  Achtung: ' + krumm + ' Aufgabe(n) brauchen noch '
+          + 'mindestens eine richtige und eine falsche Antwort.' : '')
       : 'Noch keine Aufgabe gewählt.';
+
+    var tn = el('teilmengeN');
+    tn.max = String(g.length);
+    if (Number(tn.value) > g.length) { tn.value = String(g.length || 1); }
+    if (!tn.value || Number(tn.value) < 1) { tn.value = String(Math.min(g.length, Math.max(1, g.length))); }
   }
 
   el('btnAnlegen').addEventListener('click', async function () {
     var m = el('meldungAnlegen');
-    var gewaehlt = gewaehltePool();
+    var g = gewaehltAufbereiten();
     var titel = el('ktitel').value.trim();
     var tage = Number(el('ktage').value);
-    if (!gewaehlt.length) { sagen(m, 'nein', 'Ohne Aufgaben keine Klausur.'); return; }
+    if (!g.length) { sagen(m, 'nein', 'Ohne Aufgaben keine Klausur.'); return; }
     if (!titel) { sagen(m, 'nein', 'Ein Titel für dich selbst.'); return; }
     if (!(tage >= 1 && tage <= 60)) { sagen(m, 'nein', 'Eins bis sechzig Tage.'); return; }
 
-    /* Die Angabe "so viele stimmen" und der Loesungsschluessel muessen
-       zusammenpassen. Der Server kann das nicht pruefen - er kennt den
-       Schluessel nicht -, also faengt es hier ab und nicht erst bei der
-       Auswertung. */
-    var krumm = gewaehlt.filter(function (f) {
-      return !Array.isArray(f.richtig) || f.richtig.length !== f.anzahl;
+    /* Jede Aufgabe braucht mindestens eine richtige und eine falsche
+       ausgewählte Antwort. Der Server kann das nicht prüfen - er kennt den
+       Lösungsschlüssel nicht -, also fängt es hier ab. */
+    var krumm = g.filter(function (e) {
+      var rich = e.sel.filter(function (o) { return istRichtig(e.f, o); }).length;
+      var falsch = e.sel.length - rich;
+      return rich < 1 || falsch < 1;
     });
     if (krumm.length) {
-      sagen(m, 'nein', 'Bei ' + krumm.length + ' Aufgabe(n) passt die Anzahl '
-        + 'der richtigen Antworten nicht zum Lösungsschlüssel: „'
-        + krumm[0].text.slice(0, 60) + '“');
+      sagen(m, 'nein', 'Bei ' + krumm.length + ' Aufgabe(n) fehlt eine richtige '
+        + 'oder eine falsche Antwort: „' + krumm[0].f.text.slice(0, 60) + '“');
       return;
+    }
+
+    /* Mischen und Teilmenge. */
+    var mischen = {
+      fragen: el('mischFragen').checked,
+      optionen: el('mischOptionen').checked,
+      teilmenge: null
+    };
+    if (el('teilmengeAn').checked) {
+      var n = Number(el('teilmengeN').value);
+      if (!(n >= 1 && n <= g.length)) {
+        sagen(m, 'nein', 'Die Teilmenge muss zwischen 1 und ' + g.length
+          + ' liegen.');
+        return;
+      }
+      if (n < g.length) { mischen.teilmenge = n; }
     }
 
     this.disabled = true;
     sagen(m, 'arbeit', 'Wird verschlüsselt …');
 
-    /* Was die Teilnehmer sehen: Text, Optionen, wie viele stimmen.
-       Der Lösungsschlüssel geht getrennt und verschlüsselt. */
-    var fragen = gewaehlt.map(function (f) {
-      return { text: f.text, optionen: f.optionen, anzahl: f.anzahl };
+    /* Feste Reihenfolge: Text, gewählte Optionen, wie viele stimmen.
+       Der Lösungsschlüssel geht getrennt und verschlüsselt - seine Indizes
+       zeigen auf genau diese gewählte Optionen-Teilmenge. */
+    var aufgaben = [], richtigAll = [];
+    g.forEach(function (e) {
+      var optionen = e.sel.map(function (o) { return e.f.optionen[o]; });
+      var richtigNeu = [];
+      e.sel.forEach(function (o, neu) { if (istRichtig(e.f, o)) { richtigNeu.push(neu); } });
+      aufgaben.push({ text: e.f.text, optionen: optionen, anzahl: richtigNeu.length });
+      richtigAll.push(richtigNeu);
     });
-    var loesung = {
-      v: 1,
-      verfahren: el('kverfahren').value,
-      richtig: gewaehlt.map(function (f) { return f.richtig; })
-    };
+
+    var fragen = { v: 2, mischen: mischen, aufgaben: aufgaben };
+    var loesung = { v: 1, verfahren: el('kverfahren').value, richtig: richtigAll };
 
     var a = await ruf({
       action: 'klausur_anlegen',
@@ -488,9 +592,12 @@
       return;
     }
 
-    var fragen, loesung;
+    var aufgaben, loesung, gemischt;
     try {
-      fragen = JSON.parse(a.fragen);
+      var roh = JSON.parse(a.fragen);
+      aufgaben = Array.isArray(roh) ? roh : (roh.aufgaben || []);
+      gemischt = !Array.isArray(roh) && roh.mischen
+        && (roh.mischen.fragen || roh.mischen.optionen || roh.mischen.teilmenge);
       loesung = await Krypto.mitPrivat(ich.privKey, a.loesung_chiffre);
     } catch (e) {
       this.disabled = false;
@@ -518,8 +625,8 @@
           'nicht lesbar', t.resets]);
         continue;
       }
-      var e2 = Bewertung.abgabe(fragen, loesung.richtig, inhalt.antworten,
-        loesung.verfahren);
+      var e2 = Bewertung.abgabe(aufgaben, loesung.richtig, inhalt.antworten,
+        loesung.verfahren, inhalt.auswahl);
       uebersicht.push([t.code, '', '', '', '', '', e2.punkte, e2.max,
         Math.round(e2.anteil * 100), (t.abgegeben || '').slice(0, 16), t.resets]);
       e2.zeilen.forEach(function (z) {
@@ -536,6 +643,10 @@
       ['Ausgewertet am', new Date().toLocaleString('de-DE')],
       ['Hinweis', 'Punkte, keine Noten. Die Namensspalten sind leer – auf '
         + 'dem Server gibt es dafür kein Feld.'],
+      (gemischt ? ['Hinweis', 'Reihenfolge/Auswahl war je Teilnehmer '
+        + 'unterschiedlich. Die Antwortbuchstaben in „Einzeln" beziehen sich '
+        + 'auf die feste Reihenfolge der Aufgabe, nicht auf das, was der '
+        + 'Teilnehmer auf dem Bildschirm sah.'] : []),
       []
     ];
 

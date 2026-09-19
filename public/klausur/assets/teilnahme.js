@@ -12,6 +12,13 @@
  *    und Optionen; der Lösungsschlüssel liegt verschlüsselt beim Server und
  *    wird erst im Browser der Lehrkraft geöffnet. Wer hier die
  *    Entwicklerwerkzeuge aufmacht, findet nichts.
+ *
+ * Mischen und Teilmenge: Wenn die Lehrkraft es so eingestellt hat, zieht
+ * dieser Browser lokal eine zufällige Auswahl bzw. Reihenfolge - und merkt
+ * sich, was er getan hat. Diese Zuordnung reist im verschlüsselten Umschlag
+ * mit; nur so kann die Lehrkraft später zurückrechnen. Der Server sieht sie
+ * nicht (sie ist Teil des Chiffrats), und die Seite selbst kann daraus
+ * nichts über richtig/falsch ableiten.
  */
 (function () {
   'use strict';
@@ -53,8 +60,65 @@
     catch (e) { return { ok: false, fehler: 'db' }; }
   }
 
-  /* Nur im Arbeitsspeicher, nur solange die Seite offen ist. */
-  var sitzung = { code: '', pin: '', fragen: [], oeff: '', antworten: [] };
+  /* ---------- Zufall und Mischen ----------
+     Fisher-Yates mit dem kryptografischen Zufall des Browsers. Die kleine
+     Modulo-Verzerrung ist bei zwei bis zehn Elementen ohne Belang. */
+  function zufallBis(n) {
+    var b = new Uint32Array(1);
+    (window.crypto || window.msCrypto).getRandomValues(b);
+    return b[0] % n;
+  }
+  function mischen(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = zufallBis(i + 1);
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  /* Nur im Arbeitsspeicher, nur solange die Seite offen ist.
+     aufgaben  = was gezeigt wird (evtl. gemischt/gekürzt)
+     auswahl   = Zuordnung gezeigt -> feste Reihenfolge, geht mit ins Chiffrat */
+  var sitzung = {
+    code: '', pin: '', oeff: '',
+    aufgaben: [], auswahl: null, antworten: []
+  };
+
+  /* Aus dem, was der Server schickt, die gezeigte Klausur bauen.
+     Der Server schickt entweder eine blanke Liste (alte Form) oder
+     {v, mischen:{fragen,optionen,teilmenge}, aufgaben:[...]}. */
+  function aufbauen(roh) {
+    var aufgaben = Array.isArray(roh) ? roh : (roh.aufgaben || []);
+    var regeln = (Array.isArray(roh) ? {} : (roh.mischen || {})) || {};
+
+    var reihenfolge = aufgaben.map(function (_, q) { return q; });
+    if (regeln.fragen) { mischen(reihenfolge); }
+    var tm = regeln.teilmenge;
+    if (typeof tm === 'number' && tm >= 1 && tm < reihenfolge.length) {
+      if (!regeln.fragen) { mischen(reihenfolge); }   // ziehen setzt Mischen voraus
+      reihenfolge = reihenfolge.slice(0, tm);
+      if (!regeln.fragen) {
+        reihenfolge.sort(function (x, y) { return x - y; }); // Auswahl, aber Reihenfolge wie angelegt
+      }
+    }
+
+    var gezeigt = [], optionenKarte = [];
+    reihenfolge.forEach(function (q) {
+      var a = aufgaben[q];
+      var pos = a.optionen.map(function (_, o) { return o; });
+      if (regeln.optionen) { mischen(pos); }
+      optionenKarte.push(pos);                 // gezeigte Position -> feste Option
+      gezeigt.push({
+        text: a.text,
+        anzahl: a.anzahl,
+        optionen: pos.map(function (o) { return a.optionen[o]; })
+      });
+    });
+
+    sitzung.aufgaben = gezeigt;
+    sitzung.auswahl = { fragen: reihenfolge, optionen: optionenKarte };
+    sitzung.antworten = gezeigt.map(function () { return []; });
+  }
 
   /* ---------- Anmelden ---------- */
 
@@ -81,9 +145,8 @@
     sitzung.code = code;
     sitzung.pin = pin;
     sitzung.oeff = a.oeff;
-    try { sitzung.fragen = JSON.parse(a.fragen); }
+    try { aufbauen(JSON.parse(a.fragen)); }
     catch (e) { sagen(m, 'nein', FEHLERTEXT.db); knopf.disabled = false; return; }
-    sitzung.antworten = sitzung.fragen.map(function () { return []; });
 
     el('schrittAnmelden').hidden = true;
     el('schrittFragen').hidden = false;
@@ -97,13 +160,13 @@
     var ziel = el('fragen');
     ziel.textContent = '';
 
-    sitzung.fragen.forEach(function (frage, i) {
+    sitzung.aufgaben.forEach(function (frage, i) {
       var kasten = document.createElement('div');
       kasten.className = 'frage';
 
       var kopf = document.createElement('div');
       kopf.className = 'kopf';
-      kopf.textContent = 'Aufgabe ' + (i + 1) + ' von ' + sitzung.fragen.length
+      kopf.textContent = 'Aufgabe ' + (i + 1) + ' von ' + sitzung.aufgaben.length
         + ' · ' + (frage.anzahl === 1 ? 'eine Antwort stimmt'
           : frage.anzahl + ' Antworten stimmen');
       kasten.appendChild(kopf);
@@ -157,7 +220,7 @@
   }
 
   function zaehlerSetzen(i) {
-    var frage = sitzung.fragen[i];
+    var frage = sitzung.aufgaben[i];
     var n = sitzung.antworten[i].length;
     var voll = n >= frage.anzahl;
     var z = el('zaehler' + i);
@@ -199,9 +262,10 @@
     var umschlag;
     try {
       umschlag = await Krypto.anOeffentlich(sitzung.oeff, {
-        v: 1,
+        v: 2,
         abgegeben: new Date().toISOString(),
-        antworten: sitzung.antworten
+        antworten: sitzung.antworten,
+        auswahl: sitzung.auswahl
       });
     } catch (e) {
       knopf.disabled = false;

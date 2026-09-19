@@ -7,10 +7,14 @@
       "Klebeverbindung",
       "Stiftverbindung",
       "Schrumpfverbindung",
-      "Nietverbindung mit Lochleibung"
+      "Nietverbindung mit Lochleibung",
+      "Lötverbindung",
+      "Keilwellenverbindung",
+      "Presspassung ohne Formelement"
     ],
     "anzahl": 3,
-    "richtig": [0, 2, 4]
+    "richtig": [0, 2, 4],
+    "standard": [0, 1, 2, 3, 4]
   },
   {
     "thema": "Fügeverfahren: Prinzipien",
@@ -19,10 +23,13 @@
       "Er lässt sich zerstörungsfrei lösen.",
       "Die Verbindung entsteht durch atomare oder molekulare Kräfte.",
       "Er überträgt die Kraft über Reibung.",
-      "Er setzt eine Vorspannkraft voraus."
+      "Er setzt eine Vorspannkraft voraus.",
+      "Er entsteht durch Umformen eines Fügeteils.",
+      "Er ist typisch für Schweißen, Löten und Kleben."
     ],
     "anzahl": 1,
-    "richtig": [1]
+    "richtig": [1],
+    "standard": [0, 1, 2, 3, 5]
   },
   {
     "thema": "Wälzlager: Umlaufverhältnis",
@@ -31,7 +38,9 @@
       "Der Innenring hat Umfangslast.",
       "Der Außenring hat Umfangslast.",
       "Der Innenring braucht Übermaß auf der Welle.",
-      "Der Außenring braucht Übermaß im Gehäuse."
+      "Der Außenring braucht Übermaß im Gehäuse.",
+      "Der Innenring kann mit Spielpassung montiert werden.",
+      "Punktlast liegt am Innenring an."
     ],
     "anzahl": 2,
     "richtig": [0, 2]
@@ -43,7 +52,8 @@
       "Die Montagekraft lief über die Wälzkörper.",
       "Der Schmierfilm ist abgerissen.",
       "Stromdurchgang durch das Lager.",
-      "Der Ring mit Umfangslast saß zu lose."
+      "Der Ring mit Umfangslast saß zu lose.",
+      "Zu hohe Drehzahl über längere Zeit."
     ],
     "anzahl": 1,
     "richtig": [0]
@@ -56,10 +66,13 @@
       "Schnittgeschwindigkeit",
       "Freiwinkel",
       "Eckenradius",
-      "Standzeit"
+      "Standzeit",
+      "Toleranzklasse",
+      "Werkstückwerkstoff"
     ],
     "anzahl": 3,
-    "richtig": [0, 2, 3]
+    "richtig": [0, 2, 3],
+    "standard": [0, 1, 2, 3, 4]
   },
   {
     "thema": "Schweißen: Sinnbilder",

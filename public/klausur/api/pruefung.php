@@ -76,6 +76,14 @@ function wuerfel(int $n): string {
 
 function b64(?string $s): string { return $s === null ? '' : base64_encode($s); }
 
+if (!function_exists('array_is_list')) {
+  function array_is_list(array $a): bool {
+    $i = 0;
+    foreach ($a as $k => $_) { if ($k !== $i++) { return false; } }
+    return true;
+  }
+}
+
 function chiffreOk(string $s, int $max): bool {
   if ($s === '' || strlen($s) > $max) { return false; }
   // Der Server liest den Inhalt nicht - er prueft nur, dass es der Umschlag
@@ -240,10 +248,35 @@ if ($action === 'klausur_anlegen') {
   if (!chiffreOk($loes, $MAX_CHIFFRE)) { fail('ungueltig', 400); }
   if ($tage < 1 || $tage > $MAX_TAGE) { fail('ungueltig', 400); }
   if ($fragen === '' || strlen($fragen) > $MAX_FRAGEN) { fail('zugross', 413); }
-  $f = json_decode($fragen, true);
-  if (!is_array($f) || !$f) { fail('ungueltig', 400); }
+  $fdec = json_decode($fragen, true);
+  if (!is_array($fdec) || !$fdec) { fail('ungueltig', 400); }
+
+  // Zwei Formen: die alte blanke Liste, oder {v, mischen, aufgaben}. Beim
+  // Objekt sind nur diese Schluessel erlaubt - damit niemand einen
+  // Loesungshinweis daneben schmuggelt.
+  if (array_is_list($fdec)) {
+    $aufgaben = $fdec;
+  } else {
+    foreach (array_keys($fdec) as $kk) {
+      if (!in_array($kk, ['v', 'mischen', 'aufgaben'], true)) { fail('ungueltig', 400); }
+    }
+    $aufgaben = $fdec['aufgaben'] ?? null;
+    if (!is_array($aufgaben) || !$aufgaben || !array_is_list($aufgaben)) { fail('ungueltig', 400); }
+    $mischen = $fdec['mischen'] ?? null;
+    if ($mischen !== null) {
+      if (!is_array($mischen)) { fail('ungueltig', 400); }
+      foreach (array_keys($mischen) as $kk) {
+        if (!in_array($kk, ['fragen', 'optionen', 'teilmenge'], true)) { fail('ungueltig', 400); }
+      }
+      $tm = $mischen['teilmenge'] ?? null;
+      if ($tm !== null && (!is_int($tm) || $tm < 1 || $tm > count($aufgaben))) {
+        fail('ungueltig', 400);
+      }
+    }
+  }
+
   // Im Klartextteil darf nichts stehen, was eine Antwort verraet.
-  foreach ($f as $frage) {
+  foreach ($aufgaben as $frage) {
     if (!is_array($frage) || !isset($frage['text'], $frage['optionen'], $frage['anzahl'])) {
       fail('ungueltig', 400);
     }

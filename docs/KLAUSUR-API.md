@@ -147,10 +147,53 @@ Jede Lehrkraft-Aktion schickt `code` und `auth` mit. Es gibt keine Sitzung.
 | `klausur_oeffnen` / `klausur_beenden` | `id` | — |
 | `klausur_loeschen` | `id` | — |
 | `ergebnisse` | `id` | Liste aus `code`, `abgegeben`, `antwort_chiffre`, `resets` |
+| `fragenpool` | — | `pool` — der Fragenpool, **nur für angemeldete Lehrkräfte** |
+
+### Der Fragenpool
+
+Liegt **außerhalb des öffentlichen Bereichs und außerhalb des Repos** unter
+`/home/users/ctnutzerone/files/klausur-fragenpool.json` (Pfad in
+`klausur-config.php`, Schlüssel `fragenpool`). Er enthält die **richtigen
+Antworten** und wird nur an eine angemeldete Lehrkraft ausgeliefert. Format je
+Frage (siehe `docs/klausur-fragenpool.beispiel.json`):
+
+```json
+{ "thema": "…", "text": "…",
+  "optionen": ["…", "…", …],   // gern MEHR als fünf
+  "richtig":  [0, 2, 4],       // Indizes in "optionen"
+  "standard": [0, 1, 2, 3, 4]  // optional: was vorausgewählt erscheint
+}
+```
+
+`standard` ist optional; fehlt es, wählt die Oberfläche alle richtigen plus so
+viele falsche vor, bis fünf zusammenkommen. Beim Zusammenstellen wählt die
+Lehrkraft je Aufgabe, welche Antworten (richtige wie falsche) tatsächlich in
+die Klausur wandern; `richtig` und `anzahl` der angelegten Klausur werden aus
+dieser Auswahl neu berechnet, damit Angabe und Lösungsschlüssel nie
+auseinanderlaufen.
 
 `fragen` ist JSON und liegt **im Klartext** auf dem Server — die Teilnehmer
 müssen sie lesen können. Es steht kein Lösungshinweis darin; der
-Lösungsschlüssel ist ein eigenes, verschlüsseltes Feld.
+Lösungsschlüssel ist ein eigenes, verschlüsseltes Feld. Zwei Formen sind
+erlaubt:
+
+* die blanke Liste `[{text, optionen[], anzahl}, …]` (alt), oder
+* ein Objekt `{v:2, mischen:{fragen, optionen, teilmenge}, aufgaben:[…]}`.
+
+`mischen.fragen` / `mischen.optionen` sind Wahrheitswerte, `mischen.teilmenge`
+ist `null` oder eine Zahl `1…Anzahl der Aufgaben`. Der Server **interpretiert
+diese Regeln nicht** — er prüft nur ihre Form und gibt sie unverändert an den
+Teilnehmer-Browser weiter. Beim Objekt sind ausschließlich die Schlüssel `v`,
+`mischen`, `aufgaben` erlaubt; in einer Aufgabe sind `richtig`, `loesung`,
+`korrekt` weiterhin verboten (sonst läge ein Lösungshinweis im Klartext).
+
+**Mischen und Teilmenge sind reine Präsentation, kein Täuschungsschutz.** Sie
+erschweren das Abschreiben zwischen Sitznachbarn; gegen einen zweiten Tab oder
+ein zweites Gerät helfen sie nicht (das kann eine Browser-Seite nicht — siehe
+`hinweise.html`). Der Teilnehmer-Browser zieht Auswahl und Reihenfolge lokal
+und legt die Zuordnung in seinen **verschlüsselten** Umschlag (`auswahl`);
+der Server sieht sie nie, die Lehrkraft rechnet damit auf die feste
+Reihenfolge zurück.
 
 ### Teilnehmercodes
 
@@ -164,8 +207,16 @@ Lösungsschlüssel ist ein eigenes, verschlüsseltes Feld.
 
 | Aktion | Felder | Antwort |
 | --- | --- | --- |
-| `start` | `tcode`, `tpin` | `fragen`, `oeff`, `titel_chiffre` |
+| `start` | `tcode`, `tpin` | `fragen`, `oeff` |
 | `abgeben` | `tcode`, `tpin`, `antwort_chiffre` | — |
+
+Der Umschlag in `antwort_chiffre` entschlüsselt zu `{v, abgegeben, antworten,
+auswahl}`. `antworten` ist je gezeigter Aufgabe die Liste der angekreuzten
+**gezeigten** Positionen; `auswahl` = `{fragen:[feste Indizes …],
+optionen:[[feste Optionsindizes …], …]}` bildet die gezeigte auf die feste
+Reihenfolge ab. Ohne Mischen/Teilmenge ist `auswahl` die Identität und
+optional. Der Server prüft nur, dass es ein wohlgeformter Umschlag ist
+(`iv`, `daten`, `schluessel`), und liest nichts davon.
 
 `start` ist **einmal gültig**. Der zweite Versuch scheitert mit
 `schon_benutzt`, bis die Lehrkraft zurücksetzt. Jedes Zurücksetzen wird
