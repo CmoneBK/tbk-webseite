@@ -29,6 +29,11 @@
       + 'ist für diesen Zugang noch nicht freigegeben.',
     schon_benutzt: 'Der Einladungscode ist bereits eingelöst.',
     nicht_offen: 'Die Klausur ist nicht freigegeben.',
+    nicht_entwurf: 'Diese Klausur ist kein Entwurf mehr. Was freigegeben '
+      + 'oder beendet ist, wird nicht mehr geändert.',
+    hat_codes: 'Für diese Klausur sind schon Teilnehmercodes erzeugt. '
+      + 'Ändern ginge nur unter den Händen derer, die vielleicht schon '
+      + 'schreiben.',
     zugross: 'Zu groß.',
     voll: 'Die Obergrenze ist erreicht.',
     db: 'Der Dienst antwortet gerade nicht.',
@@ -186,7 +191,10 @@
       var k = a.klausuren[i];
       var titel = '(nicht lesbar)';
       try {
-        var meta = await Krypto.mitPrivat(ich.privKey, k.meta_chiffre);
+        /* Symmetrisch geschrieben, symmetrisch gelesen. Vorher stand hier
+           mitPrivat - das erwartet einen Umschlag an den oeffentlichen
+           Schluessel und scheiterte still an jedem Titel. */
+        var meta = await Krypto.aufMachen(ich.wrapKey, k.meta_chiffre);
         titel = meta.titel || '(ohne Titel)';
       } catch (e) { /* fremder Schluessel - sollte nicht vorkommen */ }
       var tr = tb.insertRow();
@@ -195,6 +203,7 @@
       var c1 = tr.insertCell(); c1.className = 'zahl'; c1.textContent = k.codes;
       var c2 = tr.insertCell(); c2.className = 'zahl'; c2.textContent = k.abgaben;
       tr.insertCell().textContent = (k.loeschen_ab || '').slice(0, 10);
+      var zelle = tr.insertCell();
       var b = document.createElement('button');
       b.className = 'leise';
       b.textContent = 'öffnen';
@@ -203,11 +212,160 @@
       b.addEventListener('click', function () {
         klausurOeffnen(this.dataset.id, this.dataset.titel);
       });
-      tr.insertCell().appendChild(b);
+      zelle.appendChild(b);
+      /* Ein Entwurf ohne ausgegebene Codes laesst sich weiterbearbeiten.
+         Sobald Codes im Umlauf sind, schreibt womoeglich schon jemand -
+         dann waere eine Aenderung ein Austausch der Aufgaben unter seinen
+         Haenden. Der Server weist das ohnehin ab; der Knopf erscheint
+         erst gar nicht. */
+      if (k.status === 'entwurf' && Number(k.codes) === 0) {
+        var w = document.createElement('button');
+        w.className = 'leise';
+        w.textContent = 'weiterbearbeiten';
+        w.dataset.id = k.id;
+        w.addEventListener('click', function () {
+          entwurfLaden(this.dataset.id);
+        });
+        zelle.appendChild(w);
+      }
     }
   }
 
   /* ======================= Zusammenstellen ======================= */
+
+  /* Welche Klausur gerade bearbeitet wird - null heisst: eine neue. */
+  var entwurfId = null;
+
+  /* Eine Frage wiedererkennen, ohne den Poolindex zu benutzen. Der Pool
+     wird neu gebaut; danach steht an Platz 14 etwas anderes. Der Text
+     allein reicht auch nicht: Acht Bildfragen heissen "Welche Naht ist
+     hier eingetragen?" und unterscheiden sich nur im Sinnbild. Also
+     beides zusammen, gekuerzt auf 16 Hexstellen. */
+  async function kennung(f) {
+    var roh = new TextEncoder().encode(String(f.text) + '\u0000'
+      + String(f.bild || ''));
+    var h = await window.crypto.subtle.digest('SHA-256', roh);
+    var b = new Uint8Array(h), t = '';
+    for (var i = 0; i < 8; i++) {
+      t += ('0' + b[i].toString(16)).slice(-2);
+    }
+    return t;
+  }
+
+  /* Die Arbeitslage, wie sie in den Titelumschlag wandert. Sie enthaelt
+     keine Loesung - nur, was die Lehrkraft eingestellt hat. */
+  async function entwurfPacken(gewaehlteAufgaben, mischen) {
+    var auswahl = [];
+    for (var i = 0; i < gewaehlteAufgaben.length; i++) {
+      var e = gewaehlteAufgaben[i];
+      auswahl.push({
+        k: await kennung(e.f),
+        s: e.sel.slice(),
+        b: e.bild ? 1 : 0,
+        a: afbWahl[e.i] || 0
+      });
+    }
+    return {
+      v: 1,
+      verfahren: el('kverfahren').value,
+      tage: Number(el('ktage').value),
+      mischen: mischen,
+      auswahl: auswahl
+    };
+  }
+
+  /* Und zurueck. Liefert die Zahl der Aufgaben, die im Pool nicht mehr zu
+     finden waren - sie werden benannt, nicht verschwiegen. */
+  async function entwurfAuspacken(entwurf, aufgabenAusKlausur) {
+    var karte = {};
+    for (var i = 0; i < pool.length; i++) {
+      karte[await kennung(pool[i])] = i;
+    }
+    gewaehlt = {}; optWahl = {}; bildAn = {}; afbWahl = {};
+    var fehlend = [];
+    (entwurf.auswahl || []).forEach(function (a, n) {
+      var i = karte[a.k];
+      if (i === undefined) {
+        var weg = (aufgabenAusKlausur && aufgabenAusKlausur[n]
+          && aufgabenAusKlausur[n].text) || ('Aufgabe ' + (n + 1));
+        fehlend.push(weg);
+        return;
+      }
+      gewaehlt[i] = true;
+      optWahl[i] = (a.s || []).slice();
+      bildAn[i] = !!a.b;
+      if (a.a) { afbWahl[i] = a.a; }
+    });
+    if (entwurf.verfahren) { el('kverfahren').value = entwurf.verfahren; }
+    if (entwurf.tage) { el('ktage').value = String(entwurf.tage); }
+    var m = entwurf.mischen || {};
+    el('mischFragen').checked = !!m.fragen;
+    el('mischOptionen').checked = !!m.optionen;
+    el('teilmengeAn').checked = !!m.teilmenge;
+    if (m.teilmenge) { el('teilmengeN').value = String(m.teilmenge); }
+    return fehlend;
+  }
+
+  /* Einen Entwurf aus der Liste zurueck in die Werkbank holen. */
+  async function entwurfLaden(id) {
+    var m = el('meldungListe');
+    sagen(m, 'arbeit', 'Entwurf wird geladen …');
+    var a = await ruf({ action: 'klausur_lesen', code: ich.code,
+      auth: ich.auth, id: id });
+    if (!a.ok) {
+      sagen(m, 'nein', FEHLERTEXT[a.fehler] || FEHLERTEXT.ungueltig);
+      return;
+    }
+    var meta;
+    try {
+      meta = await Krypto.aufMachen(ich.wrapKey, a.klausur.meta_chiffre);
+    } catch (e) {
+      sagen(m, 'nein', 'Der Entwurf lässt sich mit diesem Schlüssel nicht '
+        + 'öffnen.');
+      return;
+    }
+    if (!meta.entwurf) {
+      sagen(m, 'nein', 'Diese Klausur wurde ohne Arbeitsstand angelegt und '
+        + 'lässt sich nicht weiterbearbeiten. Sie stammt aus einer '
+        + 'früheren Fassung.');
+      return;
+    }
+    if (!pool.length) { await poolLaden(); }
+    var aufgaben = [];
+    try {
+      var f = JSON.parse(a.klausur.fragen);
+      aufgaben = Array.isArray(f) ? f : (f.aufgaben || []);
+    } catch (e) { /* dann eben ohne die Texte der fehlenden */ }
+    var fehlend = await entwurfAuspacken(meta.entwurf, aufgaben);
+
+    entwurfId = id;
+    el('ktitel').value = meta.titel || '';
+    m.hidden = true;
+    el('kastenKlausur').hidden = true;
+    el('kastenAnlegen').hidden = false;
+    entwurfKopf();
+    filterNeu();
+    var ma = el('meldungAnlegen');
+    if (fehlend.length) {
+      sagen(ma, 'nein', fehlend.length + ' Aufgabe(n) stehen so nicht mehr '
+        + 'im Pool und fehlen jetzt in der Auswahl: „'
+        + fehlend.join('“, „') + '“. Vermutlich wurde die Frage seither '
+        + 'umformuliert – bitte neu wählen.');
+    } else {
+      sagen(ma, 'ja', 'Entwurf geladen. Änderungen mit „Entwurf speichern“ '
+        + 'sichern.');
+    }
+    el('kastenAnlegen').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  /* Der Kopf des Kastens sagt, woran gerade gearbeitet wird. */
+  function entwurfKopf() {
+    el('btnAnlegen').textContent = entwurfId
+      ? 'Entwurf speichern' : 'Klausur anlegen';
+    el('anlegenKopf').textContent = entwurfId
+      ? 'Entwurf weiterbearbeiten' : 'Zusammenstellen';
+    el('entwurfHinweis').hidden = !entwurfId;
+  }
 
   function verfahrenFuellen() {
     var s = el('kverfahren');
@@ -228,13 +386,24 @@
   }
 
   el('btnZeigAnlegen').addEventListener('click', async function () {
+    /* Neu anfangen heisst: neu anfangen. Ohne dieses Abraeumen wuerde ein
+       zuvor geladener Entwurf beim Speichern ueberschrieben, obwohl die
+       Lehrkraft eine zweite Klausur bauen wollte. */
+    entwurfId = null;
+    gewaehlt = {}; optWahl = {}; bildAn = {}; afbWahl = {};
+    el('ktitel').value = '';
+    el('meldungAnlegen').hidden = true;
+    entwurfKopf();
     el('kastenAnlegen').hidden = false;
     el('kastenKlausur').hidden = true;
     if (!pool.length) { await poolLaden(); }
+    filterNeu();
   });
 
   el('btnAbbrechen').addEventListener('click', function () {
     el('kastenAnlegen').hidden = true;
+    entwurfId = null;
+    entwurfKopf();
   });
 
   /* Lösungen ein-/ausblenden und Teilmenge-Feld zeigen. */
@@ -520,7 +689,10 @@
   });
 
   el('btnWahlLeeren').addEventListener('click', function () {
-    gewaehlt = {};
+    /* Mit der Auswahl gehen auch die Feineinstellungen: Bliebe optWahl
+       stehen, kaeme bei einer spaeter wieder aufgenommenen Aufgabe die
+       alte Antwortauswahl zurueck, ohne dass jemand sie gesetzt haette. */
+    gewaehlt = {}; optWahl = {}; bildAn = {}; afbWahl = {};
     poolZeichnen();
   });
 
@@ -731,6 +903,14 @@
       if (rich.length < 1 || falsch.length < 1) { krumm++; }
       punkte += rich.length;
     });
+    /* Der Knopf traegt die Zahl. Zwischen den Filterknoepfen ginge er
+       sonst unter, und er saehe auch dann gleich aus, wenn es gar nichts
+       abzuwaehlen gibt. */
+    var leeren = el('btnWahlLeeren');
+    leeren.textContent = g.length
+      ? 'Alle abwählen (' + g.length + ')' : 'Alle abwählen';
+    leeren.disabled = !g.length;
+
     el('poolStand').textContent = g.length
       ? g.length + ' Aufgaben, zusammen bis zu ' + punkte + ' Punkte '
         + '(bei „Teilpunkte").'
@@ -891,21 +1071,46 @@
     var fragen = { v: 2, mischen: mischen, aufgaben: aufgaben };
     var loesung = { v: 1, verfahren: el('kverfahren').value, richtig: richtigAll };
 
-    var a = await ruf({
+    /* Der Arbeitsstand geht in denselben Umschlag wie der Titel:
+       symmetrisch verschluesselt, vom Server nie gelesen. Ohne ihn liesse
+       sich die Klausur zwar durchfuehren, aber nie wieder weiterbauen. */
+    var meta = {
+      titel: titel,
+      entwurf: await entwurfPacken(g, mischen)
+    };
+
+    var a = await ruf(entwurfId ? {
+      action: 'klausur_aendern',
+      code: ich.code, auth: ich.auth, id: entwurfId,
+      meta_chiffre: await Krypto.zuMachen(ich.wrapKey, meta),
+      fragen: JSON.stringify(fragen),
+      loesung_chiffre: await Krypto.anOeffentlich(ich.oeff, loesung),
+      tage: String(tage)
+    } : {
       action: 'klausur_anlegen',
       code: ich.code, auth: ich.auth,
-      meta_chiffre: await Krypto.zuMachen(ich.wrapKey, { titel: titel }),
+      meta_chiffre: await Krypto.zuMachen(ich.wrapKey, meta),
       fragen: JSON.stringify(fragen),
       loesung_chiffre: await Krypto.anOeffentlich(ich.oeff, loesung),
       tage: String(tage)
     });
     this.disabled = false;
     if (!a.ok) { sagen(m, 'nein', FEHLERTEXT[a.fehler] || FEHLERTEXT.ungueltig); return; }
-    sagen(m, 'ja', 'Angelegt.');
-    el('kastenAnlegen').hidden = true;
-    el('ktitel').value = '';
+
+    /* Nach dem Speichern bleibt der Kasten offen und der Entwurf geladen.
+       Wer nur zwischenspeichert, soll weiterarbeiten koennen, ohne ihn
+       erneut aus der Liste zu holen. */
+    if (entwurfId) {
+      sagen(m, 'ja', 'Entwurf gespeichert. Du kannst weiterarbeiten.');
+      listeLaden();
+      return;
+    }
+    entwurfId = a.id;
+    entwurfKopf();
+    sagen(m, 'ja', 'Angelegt und als Entwurf gespeichert. Weiterarbeiten '
+      + 'geht jederzeit – auch später über „weiterbearbeiten“ in der '
+      + 'Liste.');
     listeLaden();
-    klausurOeffnen(a.id, titel);
   });
 
   /* ======================== Eine Klausur ======================== */

@@ -144,10 +144,33 @@ Jede Lehrkraft-Aktion schickt `code` und `auth` mit. Es gibt keine Sitzung.
 | --- | --- | --- |
 | `klausur_anlegen` | `meta_chiffre`, `fragen`, `loesung_chiffre`, `tage` | `id` |
 | `klausur_liste` | — | Liste aus `id`, `meta_chiffre`, `status`, `loeschen_ab`, Zahl der Codes und Abgaben |
+| `klausur_lesen` | `id` | eine eigene Klausur ganz: `fragen`, `meta_chiffre`, `loesung_chiffre`, `status`, Zahl der Codes und Abgaben |
+| `klausur_aendern` | `id`, `meta_chiffre`, `fragen`, `loesung_chiffre`, `tage` | `id` — nur solange Entwurf **und** ohne Codes |
 | `klausur_oeffnen` / `klausur_beenden` | `id` | — |
 | `klausur_loeschen` | `id` | — |
 | `ergebnisse` | `id` | Liste aus `code`, `abgegeben`, `antwort_chiffre`, `resets` |
 | `fragenpool` | — | `pool` — der Fragenpool, **nur für angemeldete Lehrkräfte** |
+
+**Entwürfe.** Eine Klausur entsteht selten in einem Zug. Deshalb trägt der
+Titelumschlag `meta_chiffre` neben dem Titel den ganzen **Arbeitsstand**:
+welche Aufgaben gewählt sind, welche Antworten davon erscheinen, welches Bild
+mitgeht, welche Anforderungsstufe die Lehrkraft vergeben hat, dazu Bewertung,
+Mischen, Teilmenge und Frist. Er ist symmetrisch verschlüsselt — der Server
+sieht ihn nie.
+
+Gemerkt wird je Aufgabe eine **Kennung aus Fragetext und Bild**, nicht der
+Poolindex: Der Pool wird neu gebaut, und dann steht an Platz 14 etwas anderes.
+Der Text allein genügt auch nicht, weil mehrere Bildfragen denselben Text
+tragen. Findet sich eine Kennung später nicht mehr — weil die Frage
+umformuliert wurde —, sagt die Oberfläche, **welche** Aufgabe fehlt, statt sie
+stillschweigend wegzulassen.
+
+Geändert wird nur, was **Entwurf ist und noch keine Teilnehmercodes hat**.
+Sobald Codes im Umlauf sind, schreibt vielleicht schon jemand; eine Änderung
+wäre dann ein Austausch der Aufgaben unter seinen Händen, und der
+Lösungsschlüssel passte nicht mehr zu dem Bogen, den er vor sich hat. Die
+Aufbewahrungsfrist läuft ab dem Anlegen und wird durch eine Änderung **nicht**
+verlängert.
 
 ### Der Fragenpool
 
@@ -347,6 +370,8 @@ in die Datenschutzerklärung und in den AV-Vertrag, nicht schöngeredet.
 | `gesperrt` | 429 | zu viele Fehlversuche |
 | `schon_benutzt` | 409 | Teilnehmercode war schon im Einsatz |
 | `nicht_offen` | 409 | Klausur ist Entwurf oder beendet |
+| `nicht_entwurf` | 409 | Ändern versucht, aber die Klausur ist freigegeben oder beendet |
+| `hat_codes` | 409 | Ändern versucht, aber es bestehen schon Teilnehmercodes |
 | `zugross` | 413 | Chiffrat über der Grenze |
 | `voll` | 500 | kein freier Code gefunden |
 | `db` | 500 | Datenbank nicht erreichbar |

@@ -108,7 +108,13 @@
 
     <!-- --------------------- Zusammenstellen --------------------- -->
     <div id="kastenAnlegen" hidden>
-      <h2>Zusammenstellen</h2>
+      <h2 id="anlegenKopf">Zusammenstellen</h2>
+      <p class="fussnote" id="entwurfHinweis" hidden>Du arbeitest an einem
+        gespeicherten Entwurf. &bdquo;Entwurf speichern&ldquo; sichert den
+        Stand und l&auml;sst dich weiterarbeiten &ndash; auch sp&auml;ter,
+        an einem anderen Tag und an einem anderen Rechner. Erst
+        &bdquo;Freigeben&ldquo; macht die Klausur f&uuml;r die Klasse
+        sichtbar; danach ist sie nicht mehr &auml;nderbar.</p>
       <div class="box">
         <label for="ktitel">Titel (nur für dich sichtbar)</label>
         <input type="text" id="ktitel" maxlength="80"
@@ -123,7 +129,9 @@
         <label for="ktage">Aufbewahrung in Tagen (1 bis 60)</label>
         <input type="number" id="ktage" class="schmal" min="1" max="60" value="30">
         <p class="fussnote">Danach löscht der Server die Klausur samt allen
-          Abgaben. Die Frist wird nie verlängert.</p>
+          Abgaben. Die Frist wird nie verlängert &ndash; auch nicht, wenn
+          du den Entwurf später noch einmal änderst. Sie läuft ab dem
+          Anlegen.</p>
       </div>
 
       <div class="box">
@@ -208,8 +216,9 @@
               aufnehmen</button>
             <button type="button" class="leise" id="btnSichtbarAus">Sichtbare
               herausnehmen</button>
-            <button type="button" class="leise" id="btnWahlLeeren">Auswahl
-              aufheben</button>
+            <button type="button" class="leise" id="btnWahlLeeren"
+              title="Nimmt alle Aufgaben aus der Klausur – auch die, die der
+                     Filter gerade verdeckt.">Alle abwählen</button>
             <button type="button" class="leise" id="btnFilterWeg">Filter
               zurücksetzen</button>
           </p>

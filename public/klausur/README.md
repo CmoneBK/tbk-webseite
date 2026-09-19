@@ -43,6 +43,24 @@ Nicht hier, mit Absicht:
   (`Training · Einheit · Seite`); fehlt sie, stammt die Frage aus den
   Lektionen.
 
+## Entwürfe
+
+Eine Klausur entsteht selten in einem Zug. Jede angelegte Klausur ist
+zunächst ein **Entwurf** und bleibt es, bis sie freigegeben wird; in der
+Liste steht dann neben ihr der Knopf **weiterbearbeiten**. Er holt den
+Arbeitsstand zurück — Auswahl, Antworten, Bilder, Anforderungsstufen,
+Bewertung, Mischen und Frist — und zwar an jedem Rechner, denn er liegt
+verschlüsselt auf dem Server und nicht im Browser.
+
+Geändert wird nur, solange **keine Teilnehmercodes** bestehen. Danach
+schreibt vielleicht schon jemand; ihm die Aufgaben unter den Händen
+auszutauschen wäre schlimmer als jeder Tippfehler. Der Knopf erscheint
+dann gar nicht erst, und der Server weist die Änderung ab.
+
+Wurde eine Frage seit dem Speichern umformuliert, findet der Entwurf sie
+nicht wieder. Die Oberfläche sagt dann, **welche** Aufgabe fehlt — sie
+lässt sie nicht stillschweigend weg.
+
 ## Was die Lehrkraft beim Zusammenstellen einstellt
 
 * **Filter über dem Pool** — vier Ebenen in der Ordnung des Materials

@@ -235,20 +235,21 @@ if ($action === 'konto_passphrase') {
    Klausuren
    ===================================================================== */
 
-// ---------- action=klausur_anlegen ----------
-if ($action === 'klausur_anlegen') {
-  anmelden($pdo, $code, $auth);
-  freigabePruefen($FREI, $NUR_CODES, $code);
-
+/* Der Inhalt einer Klausur, so wie er aus dem Browser kommt. Anlegen und
+   Aendern pruefen genau dasselbe - deshalb steht es hier einmal und nicht
+   zweimal. Liefert [meta, fragen, loesung, tage]; bei einem Befund endet
+   der Aufruf mit fail(). */
+function inhaltPruefen(int $maxMeta, int $maxChiffre, int $maxFragen,
+                       int $maxBild, int $maxTage): array {
   $meta   = (string)($_POST['meta_chiffre'] ?? '');
   $fragen = (string)($_POST['fragen'] ?? '');
   $loes   = (string)($_POST['loesung_chiffre'] ?? '');
   $tage   = (int)($_POST['tage'] ?? 0);
 
-  if (!chiffreOk($meta, 16384)) { fail('ungueltig', 400); }
-  if (!chiffreOk($loes, $MAX_CHIFFRE)) { fail('ungueltig', 400); }
-  if ($tage < 1 || $tage > $MAX_TAGE) { fail('ungueltig', 400); }
-  if ($fragen === '' || strlen($fragen) > $MAX_FRAGEN) { fail('zugross', 413); }
+  if (!chiffreOk($meta, $maxMeta)) { fail('ungueltig', 400); }
+  if (!chiffreOk($loes, $maxChiffre)) { fail('ungueltig', 400); }
+  if ($tage < 1 || $tage > $maxTage) { fail('ungueltig', 400); }
+  if ($fragen === '' || strlen($fragen) > $maxFragen) { fail('zugross', 413); }
   $fdec = json_decode($fragen, true);
   if (!is_array($fdec) || !$fdec) { fail('ungueltig', 400); }
 
@@ -296,7 +297,7 @@ if ($action === 'klausur_anlegen') {
        auch nicht weiterreichen. */
     if (array_key_exists('bild', $frage)) {
       $b = $frage['bild'];
-      if (!is_string($b) || strlen($b) > $MAX_BILD) { fail('ungueltig', 400); }
+      if (!is_string($b) || strlen($b) > $maxBild) { fail('ungueltig', 400); }
       if (substr($b, 0, 4) !== '<svg' || substr(rtrim($b), -6) !== '</svg>') {
         fail('ungueltig', 400);
       }
@@ -307,6 +308,17 @@ if ($action === 'klausur_anlegen') {
       }
     }
   }
+  return [$meta, $fragen, $loes, $tage];
+}
+
+// ---------- action=klausur_anlegen ----------
+if ($action === 'klausur_anlegen') {
+  anmelden($pdo, $code, $auth);
+  freigabePruefen($FREI, $NUR_CODES, $code);
+
+  [$meta, $fragen, $loes, $tage] =
+    inhaltPruefen(16384, $MAX_CHIFFRE, $MAX_FRAGEN, $MAX_BILD,
+                  $MAX_TAGE);
 
   $st = $pdo->prepare('SELECT COUNT(*) AS n FROM pr_klausur WHERE lehrkraft=?');
   $st->execute([$code]);
@@ -337,6 +349,62 @@ if ($action === 'klausur_liste') {
       FROM pr_klausur k WHERE k.lehrkraft=? ORDER BY k.angelegt DESC');
   $st->execute([$code]);
   out(['ok' => true, 'klausuren' => $st->fetchAll()]);
+}
+
+// ---------- action=klausur_lesen ----------
+/* Eine eigene Klausur vollstaendig zurueckgeben. Die Liste laesst die
+   Fragen weg, weil sie sonst bei jedem Blick auf die Uebersicht ueber die
+   Leitung gingen - zum Weiterbearbeiten werden sie aber gebraucht. */
+if ($action === 'klausur_lesen') {
+  anmelden($pdo, $code, $auth);
+  freigabePruefen($FREI, $NUR_CODES, $code);
+  $id = strtoupper(trim((string)($_POST['id'] ?? '')));
+  $k  = klausurVon($pdo, $code, $id);
+  $st = $pdo->prepare('SELECT
+      (SELECT COUNT(*) FROM pr_teilnahme t WHERE t.klausur=?) AS codes,
+      (SELECT COUNT(*) FROM pr_teilnahme t WHERE t.klausur=? AND t.abgegeben IS NOT NULL) AS abgaben');
+  $st->execute([$id, $id]);
+  $z = $st->fetch();
+  out(['ok' => true, 'klausur' => [
+    'id'              => $k['id'],
+    'meta_chiffre'    => $k['meta_chiffre'],
+    'fragen'          => $k['fragen'],
+    'loesung_chiffre' => $k['loesung_chiffre'],
+    'status'          => $k['status'],
+    'angelegt'        => $k['angelegt'],
+    'loeschen_ab'     => $k['loeschen_ab'],
+    'codes'           => (int)$z['codes'],
+    'abgaben'         => (int)$z['abgaben'],
+  ]]);
+}
+
+// ---------- action=klausur_aendern ----------
+/* Den Inhalt einer Klausur ersetzen. Nur solange sie Entwurf ist und noch
+   kein Teilnehmercode dafuer besteht: Sobald Codes ausgegeben sind, koennte
+   jemand bereits schreiben - dann waere eine Aenderung ein Austausch der
+   Aufgaben unter seinen Haenden, und der Loesungsschluessel passte nicht
+   mehr zu dem, was er vor sich hat. */
+if ($action === 'klausur_aendern') {
+  anmelden($pdo, $code, $auth);
+  freigabePruefen($FREI, $NUR_CODES, $code);
+  $id = strtoupper(trim((string)($_POST['id'] ?? '')));
+  $k  = klausurVon($pdo, $code, $id);
+  if ($k['status'] !== 'entwurf') { fail('nicht_entwurf', 409); }
+  $st = $pdo->prepare('SELECT COUNT(*) AS n FROM pr_teilnahme WHERE klausur=?');
+  $st->execute([$id]);
+  if ((int)$st->fetch()['n'] > 0) { fail('hat_codes', 409); }
+
+  [$meta, $fragen, $loes, $tage] =
+    inhaltPruefen(16384, $MAX_CHIFFRE, $MAX_FRAGEN, $MAX_BILD,
+                  $MAX_TAGE);
+
+  /* Die Aufbewahrungsfrist laeuft ab dem Anlegen und wird nie verlaengert -
+     das steht so in der Lehrkraftansicht und gilt auch hier. Geaendert
+     wird der Inhalt, nicht die Frist. */
+  $pdo->prepare('UPDATE pr_klausur SET meta_chiffre=?, fragen=?,
+      loesung_chiffre=? WHERE id=?')
+      ->execute([$meta, $fragen, $loes, $id]);
+  out(['ok' => true, 'id' => $id]);
 }
 
 // ---------- action=klausur_status ----------
